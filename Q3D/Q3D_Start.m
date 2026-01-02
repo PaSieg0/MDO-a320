@@ -34,10 +34,13 @@ AC.Aero.M     = 0.2;           % flight Mach number
 AC.Aero.CL    = 0.4;          % lift coefficient - comment this line to run the code for given alpha%
 % AC.Aero.Alpha = 2;             % angle of attack -  comment this line to run the code for given cl 
 
-
 %% 
 tic
 
 Res = Q3D_solver(AC);
+Res.Wing.Yst 
+Res.Wing.chord
+Res.Wing.cl
+Res.Wing.cm_c4
 
 toc
