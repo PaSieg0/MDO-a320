@@ -94,7 +94,7 @@ toc
 
 %% Extract and convert results to forces and moments
 % Get the distribution of chord length at each station from the results
-c_dist = Res.Wing.c; 
+c_dist = Res.Wing.chord; 
 
 % Y: Spanwise stations (m)
 Y = Res.Wing.Yst;

@@ -1,4 +1,4 @@
-function [Y, L, D] = aero(sweep_te_k, b_k, dihedral, twist_r, twist_k, twist_t,... 
+function [Cl, Cd] = aero(sweep_te_k, b_k, dihedral, twist_r, twist_k, twist_t,... 
                            n_max, V_MO_ref, W_AminusW, h_cr,...
                            b, c_r, c_k, c_t, CST, W_wing, W_fuel)
 % This function calculates the spanwise load distribution on a wing.
@@ -93,18 +93,8 @@ Res = Q3D_solver(AC);
 toc
 
 %% Extract and convert results to forces and moments
-% Get the distribution of chord length at each station from the results
-c_dist = Res.Wing.c; 
 
-% Y: Spanwise stations (m)
-Y = Res.Section.Y;
-
-% L: Sectional lift force per unit span (N/m)
-% L' = q * c * cl
-L = q .* c_dist .* Res.Section.Cl;
-
-% M: Sectional pitching moment per unit span about quarter-chord (Nm/m)
-% M' = q * c^2 * cm_c/4
-D = q .* c_dist.^2 .* Res.Section.Cd;
+Cl = Res.CLwing; % lift coefficient 
+Cd = Res.CDwing; % drag coefficient
 
 end
