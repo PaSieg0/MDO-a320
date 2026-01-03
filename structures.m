@@ -120,13 +120,27 @@ function [W_wing] = structures(Y, L, M, ...
     %% 3. GENERATE .LOAD FILE
     % ---------------------------------------------------------
     % Convert inputs Y (m), L (N/m), M (Nm/m) to EMWET format
-    % EMWET expects: eta, Force (N), Moment (Nm)
+    % EMWET expects: eta, TOTAL SECTION Force (N), TOTAL SECTION Moment (Nm)
+    % L and M are DISTRIBUTED loads per unit span - must integrate over segment width
     
     eta_vec = Y ./ (b/2);
     
+    % Calculate segment widths using trapezoidal rule
+    n = length(Y);
+    dy = zeros(n, 1);
+    dy(1) = Y(2) - Y(1);  % First segment
+    for i = 2:n-1
+        dy(i) = (Y(i+1) - Y(i-1)) / 2;  % Middle segments
+    end
+    dy(n) = Y(n) - Y(n-1);  % Last segment
+    
+    % Integrate distributed loads to get section loads
+    L_section = L .* dy;  % N/m * m = N
+    M_section = M .* dy;  % Nm/m * m = Nm
+    
     fid = fopen([caseName '.load'], 'w');
     for i = 1:length(eta_vec)
-        fprintf(fid, '%.4f %.4e %.4e\n', eta_vec(i), L(i), M(i));
+        fprintf(fid, '%.4f %.4e %.4e\n', eta_vec(i), L_section(i), M_section(i));
     end
     fclose(fid);
     
