@@ -1,6 +1,12 @@
 % Script to run structures.m with sample data
 clc; clear; close all;
 
+% Add EMWET directory to path (required for EMWET to find Storage folder)
+currentDir = fileparts(mfilename('fullpath'));
+emwetPath = fullfile(currentDir, 'EMWET 1.5');
+addpath(emwetPath);
+cd(emwetPath); % EMWET needs to run from EMWET directory to access Storage/
+
 %% 1. Define Sample Inputs
 % Note: caseName will default to 'a320' inside the function if we don't pass it.
 myCaseName = 'test_run'; 
@@ -36,9 +42,9 @@ engine_data.count = 1;
 engine_data.y_location = 4.7;
 engine_data.weight = 1969;
 
-airfoils.root = 'a320'; % Ensure .dat files exist
-airfoils.kink = 'a320';
-airfoils.tip  = 'a320';
+airfoils.root = 'b737a'; % Using existing B737 airfoil files
+airfoils.kink = 'b737a';
+airfoils.tip  = 'b737a';
 
 % Materials
 m_up = [7.1e10, 2795, 4.8e8, 4.6e8];

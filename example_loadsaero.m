@@ -2,12 +2,15 @@
 % This script demonstrates how to call the aerodynamic analysis functions
 % with realistic A320-like wing parameters
 
-clear all
-close all
-clc
+clear all;
+close all;
+clc;
 
-% Change to Q3D directory (required for Q3D_solver to find Storage folder)
-cd('C:\Users\Jaime\Desktop\TUD\Master\MDO\MDO-a320\Q3D')
+% Add Q3D directory to path (required for Q3D_solver to find Storage folder)
+currentDir = fileparts(mfilename('fullpath'));
+q3dPath = fullfile(currentDir, 'Q3D');
+addpath(q3dPath);
+cd(q3dPath); % Q3D_solver needs to run from Q3D directory to access Storage/
 
 %% Define Wing Geometry Parameters
 

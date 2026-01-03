@@ -128,11 +128,7 @@ function [W_wing] = structures(Y, L, M, ...
         fprintf('Running EMWET for: %s...\n', caseName);
     end
     
-    try
-        EMWET(caseName); 
-    catch ME
-        error('EMWET failed to run. Ensure EMWET.p is in the current folder.');
-    end
+    EMWET(caseName); 
     
     %% 5. READ OUTPUT
     % ---------------------------------------------------------
