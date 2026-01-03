@@ -115,6 +115,10 @@ L = q .* c_dist .* Res.Wing.cl;
 % M' = q * c^2 * cm_c/4
 M = q .* (c_dist.^2) .* Res.Wing.cm_c4;
 
+Y = [Y; b/2];
+L = [L; 0];
+M = [M; 0];
+
 % Return to original directory
 cd(originalDir);
 

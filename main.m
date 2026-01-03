@@ -103,13 +103,17 @@ C_T_ref = 1.8639e-4;    % Reference specific fuel consumption (1/s)
 % plot_wing(b, c_r, c_k, c_t, b_k, sweep_te_k, dihedral);
 % plot_airfoil(CST);
 
+% Evaluate fuel tank volume (performance)
+W_fuel = performance(b, c_r, c_k, c_t, b_k, tank_limits);
+fprintf('Initial fuel capacity: %.2f kg\n', W_fuel / 9.81);
+
 %% ============================================================
 %  CONVERGENCE LOOP
 %% ============================================================
 
 % Convergence parameters
 max_iter = 20;
-tol = 0.01;  % 1% convergence tolerance
+tol = 0.001;  % 0.1% convergence tolerance
 converged = false;
 iter = 0;
 
@@ -120,7 +124,6 @@ while ~converged && iter < max_iter
     fprintf('\n--- Iteration %d ---\n', iter);
     
     W_wing_old = W_wing;
-    W_fuel_old = W_fuel;
     
     % Loads analysis - Use actual loads() function
     [Y, L, M] = loads(sweep_te_k, b_k, dihedral, twist_r, twist_k, twist_t,... 
@@ -128,24 +131,17 @@ while ~converged && iter < max_iter
                       b, c_r, c_k, c_t, CST, W_wing, W_fuel);
 
     % Structures analysis
-    caseName = sprintf('a320_iter%d', iter);
     W_wing_new = 9.81 * structures(Y, L, M, ...
                             sweep_te_k, b_k, dihedral, ...
                             b, c_r, c_k, c_t, ...
-                            MTOW, ZFW, n_max, S_ref, ...
+                            MTOW, ZFW, 1, S_ref, ...
                             mat_props, spar_locs, ...
                             tank_limits, engine_data, airfoils, ...
-                            'a320_main', false);
-
-    % Evaluate fuel tank volume (performance)
-    W_fuel_new = performance(b, c_r, c_k, c_t, b_k, tank_limits);
+                            'a320_main');
     
-    % Check convergence (skip first iteration)
     err_wing = abs(W_wing_new - W_wing_old) / W_wing_old;
-    err_fuel = abs(W_fuel_new - W_fuel_old) / W_fuel_old;
     
     fprintf('  W_wing: %.2f kg (change: %.2f%%)\n', W_wing_new/9.81, err_wing*100);
-    fprintf('  W_fuel: %.2f kg (change: %.2f%% - NOTE: constant, geometry-based)\n', W_fuel_new/9.81, err_fuel*100);
     
     if err_wing < tol
         converged = true;
@@ -154,7 +150,6 @@ while ~converged && iter < max_iter
     
     % Update for next iteration
     W_wing = W_wing_new;
-    W_fuel = W_fuel_new;
     MTOW = (W_AminusW + W_wing + W_fuel) / 9.81;
     ZFW = (W_AminusW + W_wing) / 9.81;
 end
@@ -178,9 +173,9 @@ fprintf('===================================================\n\n');
 L_D_ratio = Cl / Cd;
 
 % Define weights for cruise segment
-W_TO_max = W_AminusW + 2 * W_wing_new + W_fuel_new;
+W_TO_max = W_AminusW + 2 * W_wing_new + W_fuel;
 W_start_cr = W_TO_max;  % Weight at start of cruise (after taxi, takeoff, climb)
-W_end_cr = (1 - W_fuel_new / W_TO_max) * W_start_cr / (0.938);
+W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
 
 % Calculate performance using Breguet equations
 [R, W_fuel_calc, C_T] = calculatePerformance(V_cr, h_cr, L_D_ratio, ...
@@ -193,7 +188,7 @@ W_end_cr = (1 - W_fuel_new / W_TO_max) * W_start_cr / (0.938);
 
 fprintf('\n========== MDO ANALYSIS RESULTS ==========\n');
 fprintf('Wing Weight:        %.2f kg\n', W_wing_new / 9.81);
-fprintf('Fuel Capacity:      %.2f kg\n', W_fuel_new / 9.81);
+fprintf('Fuel Capacity:      %.2f kg\n', W_fuel / 9.81);
 fprintf('Lift Coefficient:   %.4f\n', Cl);
 fprintf('Drag Coefficient:   %.4f\n', Cd);
 fprintf('L/D Ratio:          %.2f\n', L_D_ratio);
