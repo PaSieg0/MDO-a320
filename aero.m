@@ -4,6 +4,14 @@ function [Cl, Cd] = aero(sweep_te_k, b_k, dihedral, twist_r, twist_k, twist_t,..
 % This function calculates the spanwise load distribution on a wing.
 % It uses the Q3D_solver based on the provided geometric and flight parameters.
 
+% Handle directory navigation for Q3D
+originalDir = pwd;
+aeroPath = fileparts(mfilename('fullpath'));
+q3dPath = fullfile(aeroPath, 'Q3D');
+if exist(q3dPath, 'dir')
+    cd(q3dPath);
+end
+
 % Define the AC (Aircraft) structure for the Q3D_solver
 
 % --- Wing Planform Geometry Calculation ---
@@ -60,8 +68,10 @@ mu_cr = mu_0 * (T0 + S_suth) / (T_cr + S_suth) * (T_cr / T0)^(1.5);
 AC.Wing.inc  = 0;   
             
 % Airfoil coefficients from CST parameter
-AC.Wing.Airfoils   = CST;
-AC.Wing.eta = [0; 1];  % Spanwise location of the airfoil sections
+AC.Wing.Airfoils   = [CST;
+                      CST;
+                      CST];
+AC.Wing.eta = [0;b_k/(b/2);1];  % Spanwise location of the airfoil sections
 
 % Analysis settings
 AC.Visc  = 1;              % 0 for inviscid (potential flow) analysis
@@ -88,13 +98,14 @@ Required_Lift = n_max * W_total;   % Required lift force (Weight * load factor)
 AC.Aero.CL = Required_Lift / (q * S_wing);
 
 %% Run the aerodynamic solver
-tic
 Res = Q3D_solver(AC);
-toc
 
 %% Extract and convert results to forces and moments
 
 Cl = Res.CLwing; % lift coefficient 
 Cd = Res.CDwing; % drag coefficient
+
+% Return to original directory
+cd(originalDir);
 
 end

@@ -25,6 +25,14 @@ function [W_wing] = structures(Y, L, M, ...
     if nargin < 21 || isempty(verbose)
         verbose = false;
     end
+    
+    % Handle directory navigation for EMWET
+    originalDir = pwd;
+    structuresPath = fileparts(mfilename('fullpath'));
+    emwetPath = fullfile(structuresPath, 'EMWET 1.5');
+    if exist(emwetPath, 'dir')
+        cd(emwetPath);
+    end
 
     %% 1. GEOMETRY CALCULATION
     % ---------------------------------------------------------
@@ -150,4 +158,7 @@ function [W_wing] = structures(Y, L, M, ...
     else
         error('Output file was not created.');
     end
+    
+    % Return to original directory
+    cd(originalDir);
 end
