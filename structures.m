@@ -29,7 +29,7 @@ function [W_wing] = structures(Y, L, M, ...
     % Handle directory navigation for EMWET
     originalDir = pwd;
     structuresPath = fileparts(mfilename('fullpath'));
-    emwetPath = fullfile(structuresPath, 'EMWET 1.5');
+    emwetPath = fullfile(structuresPath, 'EMWET');
     if exist(emwetPath, 'dir')
         cd(emwetPath);
     end

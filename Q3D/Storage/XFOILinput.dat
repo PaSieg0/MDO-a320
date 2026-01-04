@@ -7,12 +7,12 @@ load AFsection8.dat
 
 oper
 iter 400
-visc 7.64816e+06
-m 0.53723
+visc 6.14767e+06
+m 0.199992
 pacc
 Xfout.dat
 
-cl 0.837574
+cl 0.292079
 pacc
 
 quit

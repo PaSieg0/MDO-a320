@@ -4,14 +4,6 @@ function [Y, L, M] = loads(sweep_te_k, b_k, dihedral, twist_r, twist_k, twist_t,
 % This function calculates the spanwise load distribution on a wing.
 % It uses the Q3D_solver based on the provided geometric and flight parameters.
 
-% Handle directory navigation for Q3D
-originalDir = pwd;
-loadsPath = fileparts(mfilename('fullpath'));
-q3dPath = fullfile(loadsPath, 'Q3D');
-if exist(q3dPath, 'dir')
-    cd(q3dPath);
-end
-
 % Define the AC (Aircraft) structure for the Q3D_solver
 
 % --- Wing Planform Geometry Calculation ---
@@ -95,8 +87,19 @@ q = 0.5 * rho_cr * AC.Aero.V^2; % Dynamic pressure
 Required_Lift = n_max * W_total;   % Required lift force (Weight * load factor)
 AC.Aero.CL = Required_Lift / (q * S_wing);
 
+% Handle directory navigation for Q3D
+originalDir = pwd;
+loadsPath = fileparts(mfilename('fullpath'));
+q3dPath = fullfile(loadsPath, 'Q3D');
+if exist(q3dPath, 'dir')
+    cd(q3dPath);
+end
+
 %% Run the aerodynamic solver
 Res = Q3D_solver(AC);
+
+% Return to original directory
+cd(originalDir);
 
 %% Extract and convert results to forces and moments
 % Get the distribution of chord length at each station from the results
@@ -116,8 +119,5 @@ M = q .* (c_dist.^2) .* Res.Wing.cm_c4;
 Y = [Y; b/2];
 L = [L; 0];
 M = [M; 0];
-
-% Return to original directory
-cd(originalDir);
 
 end

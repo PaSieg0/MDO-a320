@@ -1,14 +1,13 @@
-%% Main MDO Analysis Script for A320 Wing Design
-clear all;
-close all;
-clc;
-
-% Setup paths
-currentDir = fileparts(mfilename('fullpath'));
-q3dPath = fullfile(currentDir, 'Q3D');
-emwetPath = fullfile(currentDir, 'EMWET');
-addpath(q3dPath);
-addpath(emwetPath);
+function [Range] = optimize(x)
+% OPTIMIZE Wrapper function to run MDO analysis for given design variables
+% Extract design variables from input vector x
+b = x(1);           % Total wingspan (m)
+c_r = x(2);         % Root chord (m)
+c_k = x(3);         % Kink chord (m)
+c_t = x(4);         % Tip chord (m)
+M_cr = x(5);        % Cruise Mach number [-]
+h_cr = x(6);        % Cruise altitude (m)
+CST = x(7:16);      % CST airfoil parameters (10 values)
 
 %%  SECTION 1: CONSTANT VALUES
 b_k = 4.36 + 3.95/2;          % Spanwise location of kink (m) [Estimated, drawing]
@@ -25,7 +24,6 @@ twist_t = -3;       % Twist at tip (deg) [Typical washout]
 
 M_MO_ref = 0.82;   % Maximum operating Mach number [-] [Specification]
 n_max = 2.5;        % Maximum load factor (Structural) [CS-25 requirement]
-n_cruise = 1.0;     % Cruise load factor (Performance)
 
 gamma = 1.4;        % Ratio of specific heats [-] [ISA]
 R = 287.058;        % Specific gas constant (J/kg-K) [ISA]
@@ -51,28 +49,10 @@ mat_props.rear  = m_up;
 
 C_T_ref = 1.8639e-4;    % Reference specific fuel consumption (1/s)
 
-%%  SECTION 2: DESIGN VECTOR INITIAL VALUES DEFINITION
-
-% Planform dimensions (in meters) - Source: Assignment specification
-b = 34.0;          % Total wingspan (m) [Drawing]
-c_r = 7.0;          % Root chord (m) [Drawing]
-c_k = 3.7;         % Kink chord (m) [Drawing]
-c_t = 1.6;          % Tip chord (m) [Drawing]
-
-% Flight parameters - Source: Assignment specification
-M_cr = 0.78;        % Cruise Mach number [-] [Specification]
-h_cr = 11278.4;     % Cruise altitude (m) = 37,000 ft [Specification: 37000 ft]
-
-% Airfoil shape (CST parameters) - Source: Baseline airfoil from assignment
-CST = [0.1800 0.2800 0.2400 0.2200 0.2400 -0.1000 -0.1800 -0.1200 -0.0300 0.0600];
-
-% Construct design vector for optimization
-x0 = [b, c_r, c_k, c_t, M_cr, h_cr, CST];
-
 %% SECTION 3: INITIAL GUESS VALUES FOR WEIGHTS
 
 % Weight breakdown (in Newtons)
-W_wing = 50000;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
+W_wing = 60000;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
 W_fuel = 150000;    % Fuel weight (N) [Estimated for medium range]
 
 %%  SECTION 4: START OF OPTIMIZER LOOP
@@ -84,7 +64,7 @@ S_ref = (c_r + c_k) * b_k + (c_k + c_t) * (b/2 - b_k); % Area
 
 % Airfoils
 cst2dat(CST, 'EMWET/optimized_airfoil');  % Generate .dat file for airfoil in emwet folder
-airfoils.root = 'EMWET /optimized_airfoil';
+airfoils.root = 'EMWET/optimized_airfoil';
 airfoils.kink = 'EMWET/optimized_airfoil';
 airfoils.tip  = 'EMWET/optimized_airfoil';
 
@@ -173,20 +153,8 @@ W_start_cr = W_TO_max;  % Weight at start of cruise (after taxi, takeoff, climb)
 W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
 
 % Calculate performance using Breguet equations
-[R, W_fuel_calc, C_T] = calculatePerformance(V_cr, h_cr, L_D_ratio, ...
+[Range, ~, ~] = calculatePerformance(V_cr, h_cr, L_D_ratio, ...
     W_start_cr, W_end_cr, W_TO_max, ...
     V_cr_ref, h_cr_ref, C_T_ref);
 
-%% SECTION 7: DISPLAY FINAL RESULTS
-
-fprintf('\n========== MDO ANALYSIS RESULTS ==========\n');
-fprintf('Wing Weight:        %.2f kg\n', W_wing_new / 9.81);
-fprintf('Total Aircraft Weight: %.2f kg\n', MTOW);
-fprintf('Fuel Capacity:      %.2f kg\n', W_fuel / 9.81);
-fprintf('Lift Coefficient:   %.4f\n', Cl);
-fprintf('Drag Coefficient:   %.4f\n', Cd);
-fprintf('L/D Ratio:          %.2f\n', L_D_ratio);
-fprintf('Mission Range:      %.2f km\n', R / 1000);
-fprintf('Fuel Consumption:   %.2f kg\n', W_fuel_calc / 9.81);
-fprintf('Iterations:         %d\n', iter);
-fprintf('==========================================\n\n');
+end

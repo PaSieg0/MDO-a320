@@ -32,7 +32,7 @@ twist_k = -1.0;     % Kink twist (deg)
 twist_t = -3;       % Tip twist (deg)
 
 % Airfoil - EXACT from main.m
-CST = [0.2171 0.3450 0.2975 0.2685 0.2893 -0.1299 -0.2388 -0.1635 -0.0476 0.0797];
+CST = [0.1800 0.2800 0.2400 0.2200 0.2400 -0.1000 -0.1800 -0.1200 -0.0300 0.0600];
 
 % Flight condition - EXACT from main.m (the problematic one)
 M_cr = 0.78;        % Cruise Mach (DIVERGES in main.m)
