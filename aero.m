@@ -1,5 +1,5 @@
 function [Cl, Cd] = aero(sweep_te_k, b_k, dihedral, twist_r, twist_k, twist_t,... 
-                           n_max, V_MO_ref, W_AminusW, h_cr,...
+                           M_cr, W_AminusW, h_cr,...
                            b, c_r, c_k, c_t, CST, W_wing, W_fuel)
 % This function calculates the spanwise load distribution on a wing.
 % It uses the Q3D_solver based on the provided geometric and flight parameters.
@@ -44,18 +44,16 @@ AC.Wing.Geom = [x_le_r,    0,        0,       c_r,        twist_r;
 
 % --- Atmospheric Properties Calculation (ISA Model for Troposphere, h < 11km) ---
 % Constants for International Standard Atmosphere
-T0 = 288.15;    % Sea level temperature [K]
-P0 = 101325;    % Sea level pressure [Pa]
-g0 = 9.80665;   % Gravitational acceleration [m/s^2]
-L = 0.0065;     % Temperature lapse rate [K/m]
+% Properties at cruise altitude h_cr using standard atmosphere model
+[~, rho_cr, T_cr] = stdatm(h_cr);
+
+% Additional atmospheric properties
 R = 287.058;    % Specific gas constant for dry air [J/(kg*K)]
 gamma = 1.4;    % Ratio of specific heats for air
-
-% Properties at cruise altitude h_cr
-T_cr = T0 - L * h_cr; % Temperature at altitude [K]
-P_cr = P0 * (T_cr / T0)^(g0 / (L * R)); % Pressure at altitude [Pa]
-rho_cr = P_cr / (R * T_cr); % Density at altitude [kg/m^3]
 a_cr = sqrt(gamma * R * T_cr); % Speed of sound at altitude [m/s]
+
+% Reference conditions for viscosity calculation
+T0 = 288.15;    % Sea level temperature [K]
 
 % Dynamic viscosity using Sutherland's Law
 mu_0 = 1.789e-5; % Reference viscosity at T0 [Pa.s]
@@ -78,23 +76,23 @@ AC.Visc  = 1;              % 0 for inviscid (potential flow) analysis
 AC.Aero.MaxIterIndex = 150;
 
 % Flight Condition using calculated atmospheric properties
-AC.Aero.V     = V_MO_ref;  % Flight speed (m/s)
+AC.Aero.V     = M_cr * a_cr;  % Flight speed (m/s)
 AC.Aero.rho   = rho_cr;    % Air density at cruise altitude
 AC.Aero.alt   = h_cr;      % Flight altitude (m)
-AC.Aero.M     = V_MO_ref / a_cr; % Mach number at altitude
+AC.Aero.M     = M_cr; % Mach number at altitude
 
 % Calculate Reynolds number based on Mean Aerodynamic Chord (MAC)
 S_half = (c_r + c_k) * b_k / 2 + (c_k + c_t) * (b/2 - b_k) / 2; % Semi-span area
 int_c2_dy = (b_k/3) * (c_r^2 + c_r*c_k + c_k^2) + ...
             ((b/2 - b_k)/3) * (c_k^2 + c_k*c_t + c_t^2);
 MAC = (1 / S_half) * int_c2_dy;
-AC.Aero.Re = (rho_cr * V_MO_ref * MAC) / mu_cr;
+AC.Aero.Re = (rho_cr * AC.Aero.V * MAC) / mu_cr;
 
 % Calculate the required lift coefficient (CL) for the flight condition
 W_total = W_AminusW + W_wing + W_fuel; % Total weight (N)
 S_wing = 2 * S_half; % Total wing planform area
 q = 0.5 * rho_cr * AC.Aero.V^2; % Dynamic pressure
-Required_Lift = n_max * W_total;   % Required lift force (Weight * load factor)
+Required_Lift = W_total;   % Required lift force
 AC.Aero.CL = Required_Lift / (q * S_wing);
 
 %% Run the aerodynamic solver

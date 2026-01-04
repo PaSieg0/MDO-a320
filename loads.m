@@ -44,18 +44,16 @@ AC.Wing.Geom = [x_le_r,    0,        0,       c_r,        twist_r;
 
 % --- Atmospheric Properties Calculation (ISA Model for Troposphere, h < 11km) ---
 % Constants for International Standard Atmosphere
-T0 = 288.15;    % Sea level temperature [K]
-P0 = 101325;    % Sea level pressure [Pa]
-g0 = 9.80665;   % Gravitational acceleration [m/s^2]
-L = 0.0065;     % Temperature lapse rate [K/m]
+% Properties at cruise altitude h_cr using standard atmosphere model
+[~, rho_cr, T_cr] = stdatm(h_cr);
+
+% Additional atmospheric properties
 R = 287.058;    % Specific gas constant for dry air [J/(kg*K)]
 gamma = 1.4;    % Ratio of specific heats for air
-
-% Properties at cruise altitude h_cr
-T_cr = T0 - L * h_cr; % Temperature at altitude [K]
-P_cr = P0 * (T_cr / T0)^(g0 / (L * R)); % Pressure at altitude [Pa]
-rho_cr = P_cr / (R * T_cr); % Density at altitude [kg/m^3]
 a_cr = sqrt(gamma * R * T_cr); % Speed of sound at altitude [m/s]
+
+% Reference conditions for viscosity calculation
+T0 = 288.15;    % Sea level temperature [K]
 
 % Dynamic viscosity using Sutherland's Law
 mu_0 = 1.789e-5; % Reference viscosity at T0 [Pa.s]

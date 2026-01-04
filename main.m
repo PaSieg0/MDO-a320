@@ -14,55 +14,62 @@ addpath(emwetPath);
 %  SECTION 1: DATA DEFINITION
 %% ============================================================
 
-% Planform dimensions (in meters)
-b = 34.1;           % Total wingspan (m)
-c_r = 7.2;          % Root chord (m)
-c_k = 4.5;          % Kink chord (m)
-c_t = 2.0;          % Tip chord (m)
-b_k = 5.5;          % Spanwise location of kink (m)
+% Planform dimensions (in meters) - Source: Assignment specification
+b = 15.033*2;          % Total wingspan (m) [Specification]
+c_r = 6.1;          % Root chord (m) [Drawing]
+c_k = 3.7;         % Kink chord (m) [Drawing]
+c_t = 1.6;          % Tip chord (m) [Specification]
+b_k = 4.36;          % Spanwise location of kink (m) [Estimated, drawing]
 
-% Wing angles (in degrees) - FIXED FOR CONVERGENCE
-% 0.1 deg sweep causes shock issues. Increased to A320 realistic values.
-sweep_te_k = 10;    % Trailing edge sweep angle at kink (deg) 
-dihedral = 5;       % Dihedral angle (deg)
+% Wing angles (in degrees)
+sweep_te_k = 0.01;    % Trailing edge sweep angle at kink (deg) [Estimated for aerodynamic efficiency]
+dihedral = 5;       % Dihedral angle (deg) [Typical A320 value]
 
 % Twist (Washout) - CRITICAL FOR CONVERGENCE
 % Tips must be twisted down to prevent shock-induced tip stall at Mach 0.78
-twist_r = 0;        % Twist at root (deg)
-twist_k = -1.0;     % Twist at kink (deg)
-twist_t = -3;     % Twist at tip (deg)
+twist_r = 0;        % Twist at root (deg) [Standard]
+twist_k = -1.0;     % Twist at kink (deg) [Typical washout]
+twist_t = -3;       % Twist at tip (deg) [Typical washout]
 
-% Flight parameters
-h_cr = 10000;       % Cruise altitude (m)
-V_MO_ref = 250;     % Maximum operating speed (m/s)
-n_max = 2.5;        % Maximum load factor (Structural)
+% Flight parameters - Source: Assignment specification
+M_cr = 0.78;        % Cruise Mach number [-] [Specification]
+h_cr = 11278.4;     % Cruise altitude (m) = 37,000 ft [Specification: 37000 ft]
+n_max = 2.5;        % Maximum load factor (Structural) [CS-25 requirement]
 n_cruise = 1.0;     % Cruise load factor (Performance)
 
+% Calculate cruise speed from Mach number using ISA model
+[~, ~, T_cr] = stdatm(h_cr);  % Get temperature at cruise altitude
+gamma = 1.4;        % Ratio of specific heats [-] [ISA]
+R = 287.058;        % Specific gas constant (J/kg-K) [ISA]
+a_cr = sqrt(gamma * R * T_cr);  % Speed of sound at cruise
+V_MO_ref = M_cr * a_cr;  % Cruise speed (m/s)
+
 % Weight breakdown (in Newtons)
-W_AminusW = 400000; % Aircraft weight minus wing (N)
-W_wing = 50000;     % Wing weight (N) - initial guess (~5100 kg, reasonable for A320)
-W_fuel = 150000;    % Fuel weight (N)
+W_AminusW = 400000; % Aircraft weight minus wing (N) [Estimated for A320 class]
+W_wing = 50000;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
+W_fuel = 150000;    % Fuel weight (N) [Estimated for medium range]
 
 % Structures parameters
 MTOW = (W_AminusW + W_wing + W_fuel) / 9.81; % kg
 ZFW = (W_AminusW + W_wing) / 9.81;           % kg
-S_ref = 122.6;      % Wing reference area (m^2)
+S_ref = 122.6;      % Wing reference area (m^2) [A320 typical value]
 
-% Airfoil shape (CST parameters)
-CST = [ 0.2171 0.3450 0.2975 0.2685 0.2893 -0.1299 -0.2388 -0.1635 -0.0476 0.0797 ];
+% Airfoil shape (CST parameters) - Source: Baseline airfoil from assignment
+% Thickness-to-chord ratio: 0.13 [Specification]
+CST = [0.2171 0.3450 0.2975 0.2685 0.2893 -0.1299 -0.2388 -0.1635 -0.0476 0.0797];
 
 % Spar and tank
-spar_locs = [0.15, 0.65];
-tank_limits = [0.1, 0.9];
+spar_locs = [0.15, 0.65];  % Front and rear spar locations [% chord, typical wing box]
+tank_limits = [0.1, 0.9];  % Fuel tank spanwise limits [% half-span, typical]
 
 % Engine data
-engine_data.count = 1;
-engine_data.y_location = 4.7;
-engine_data.weight = 1969;
+engine_data.count = 1;      % Engines per half-wing [Standard twin-engine config]
+engine_data.y_location = 4.7;  % Engine spanwise position (m) [~35% span, typical]
+engine_data.weight = 1969;  % Engine weight (kg) [CFM56-5B class turbofan]
 
 % Airfoils
-airfoils.root = 'b737a';
-airfoils.kink = 'b737a';
+airfoils.root = 'b737a';  % Root airfoil profile [Placeholder, similar t/c]
+airfoils.kink = 'b737a';  % Kink airfoil profile
 airfoils.tip  = 'b737a';
 
 % Materials
@@ -73,18 +80,12 @@ mat_props.lower = m_up;
 mat_props.front = m_fr;
 mat_props.rear  = m_up;
 
-% Atmospheric constants
-T0 = 288.15;        % Sea level temperature (K)
-a0 = 340.3;         % Sea level speed of sound (m/s)
-L_atm = -0.0065;    % Temperature lapse rate (K/m)
-
-% Cruise conditions
-Mcr = 0.78;         % Cruise Mach number
-
-% Calculate cruise speed and atmospheric conditions
-T = T0 + L_atm * h_cr;  % Temperature at cruise altitude (K)
-a = a0 * sqrt(T / T0);  % Speed of sound at cruise altitude (m/s)
-V_cr = Mcr * a;         % Cruise speed (m/s)
+% Calculate cruise speed and atmospheric conditions using ISA
+[~, ~, T] = stdatm(h_cr);  % Get temperature at cruise altitude (K)
+gamma = 1.4;        % Ratio of specific heats [-]
+R = 287.058;        % Specific gas constant (J/kg-K)
+a = sqrt(gamma * R * T);  % Speed of sound at cruise altitude (m/s)
+V_cr = M_cr * a;    % Cruise speed (m/s)
 
 % Engine reference conditions NEEDS CHECK
 
@@ -100,8 +101,8 @@ C_T_ref = 1.8639e-4;    % Reference specific fuel consumption (1/s)
 %% ============================================================
 
 % Plot wing geometry for verification
-% plot_wing(b, c_r, c_k, c_t, b_k, sweep_te_k, dihedral);
-% plot_airfoil(CST);
+plot_wing(b, c_r, c_k, c_t, b_k, sweep_te_k, dihedral);
+plot_airfoil(CST);
 
 % Evaluate fuel tank volume (performance)
 W_fuel = performance(b, c_r, c_k, c_t, b_k, tank_limits);
@@ -150,8 +151,8 @@ while ~converged && iter < max_iter
     
     % Update for next iteration
     W_wing = W_wing_new;
-    MTOW = (W_AminusW + W_wing + W_fuel) / 9.81;
-    ZFW = (W_AminusW + W_wing) / 9.81;
+    MTOW = (W_AminusW + 2*W_wing + W_fuel) / 9.81;
+    ZFW = (W_AminusW + 2*W_wing) / 9.81;
 end
 
 if ~converged
@@ -166,7 +167,7 @@ fprintf('===================================================\n\n');
 
 % Aerodynamic analysis
 [Cl, Cd] = aero(sweep_te_k, b_k, dihedral, twist_r, twist_k, twist_t,... 
-                n_cruise, V_cr, W_AminusW, h_cr,...
+                M_cr, W_AminusW, h_cr,...
                 b, c_r, c_k, c_t, CST, W_wing_new, W_fuel);
 
 % Calculate L/D ratio from aerodynamic coefficients
