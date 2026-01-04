@@ -20,16 +20,10 @@ rho_fuel = 804; % Jet A-1 fuel density
 % Airfoil data file
 filename = 'b737a.dat';
 
-% Apply tank spanwise limits
-half_span = b / 2;
-y_tank_start = tank_limits(1) * half_span;  % Start of fuel tank (m)
-y_tank_end = tank_limits(2) * half_span;    % End of fuel tank (m)
-
 % Calculate volume using new function
 [Vol_full_one_wing, ~, ~] = calculate_wing_tank_volume(c_r, c_k, c_t, b_k, b, filename, spar_locs(1), spar_locs(2));
 
-% Scale by spanwise fraction
-span_fraction = (y_tank_end - y_tank_start) / half_span;
+
 V_total = Vol_full_one_wing * 2 * span_fraction;
 
 % Calculate fuel mass and weight
