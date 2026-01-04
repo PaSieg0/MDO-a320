@@ -64,7 +64,7 @@ M_cr = 0.78;        % Cruise Mach number [-] [Specification]
 h_cr = 11278.4;     % Cruise altitude (m) = 37,000 ft [Specification: 37000 ft]
 
 % Airfoil shape (CST parameters) - Source: Baseline airfoil from assignment
-CST = [0.2171 0.3450 0.2975 0.2685 0.2893 -0.1299 -0.2388 -0.1635 -0.0476 0.0797];
+CST = [0.1800 0.2800 0.2400 0.2200 0.2400 -0.1000 -0.1800 -0.1200 -0.0300 0.0600];
 
 %% SECTION 3: INITIAL GUESS VALUES FOR WEIGHTS
 
@@ -96,9 +96,9 @@ V_MO_ref = M_MO_ref * a_cr;  % Maximum operating speed (m/s)
 V_cr_ref = V_cr;        % Reference cruise speed (m/s) - matches actual cruise
 h_cr_ref = h_cr;        % Reference cruise altitude (m)
 
-% Plot wing geometry for verification
-plot_wing(b, c_r, c_k, c_t, b_k, sweep_te_k, dihedral);
-plot_airfoil(CST);
+% % Plot wing geometry for verification
+% plot_wing(b, c_r, c_k, c_t, b_k, sweep_te_k, dihedral);
+% plot_airfoil(CST);
 
 % Evaluate fuel tank volume (performance)
 W_fuel = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits);
