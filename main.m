@@ -15,11 +15,11 @@ addpath(emwetPath);
 %% ============================================================
 
 % Planform dimensions (in meters) - Source: Assignment specification
-b = 15.033*2;          % Total wingspan (m) [Specification]
-c_r = 6.1;          % Root chord (m) [Drawing]
+b = 34.0;          % Total wingspan (m) [Specification]
+c_r = 7.0;          % Root chord (m) [Drawing]
 c_k = 3.7;         % Kink chord (m) [Drawing]
 c_t = 1.6;          % Tip chord (m) [Specification]
-b_k = 4.36;          % Spanwise location of kink (m) [Estimated, drawing]
+b_k = 4.36 + 3.95/2;          % Spanwise location of kink (m) [Estimated, drawing]
 
 % Wing angles (in degrees)
 sweep_te_k = 0.01;    % Trailing edge sweep angle at kink (deg) [Estimated for aerodynamic efficiency]
@@ -33,6 +33,7 @@ twist_t = -3;       % Twist at tip (deg) [Typical washout]
 
 % Flight parameters - Source: Assignment specification
 M_cr = 0.78;        % Cruise Mach number [-] [Specification]
+M_MO_ref = 0.82;   % Maximum operating Mach number [-] [Specification]
 h_cr = 11278.4;     % Cruise altitude (m) = 37,000 ft [Specification: 37000 ft]
 n_max = 2.5;        % Maximum load factor (Structural) [CS-25 requirement]
 n_cruise = 1.0;     % Cruise load factor (Performance)
@@ -42,7 +43,7 @@ n_cruise = 1.0;     % Cruise load factor (Performance)
 gamma = 1.4;        % Ratio of specific heats [-] [ISA]
 R = 287.058;        % Specific gas constant (J/kg-K) [ISA]
 a_cr = sqrt(gamma * R * T_cr);  % Speed of sound at cruise
-V_MO_ref = M_cr * a_cr;  % Cruise speed (m/s)
+V_MO_ref = M_MO_ref * a_cr;  % Maximum operating speed (m/s)
 
 % Weight breakdown (in Newtons)
 W_AminusW = 400000; % Aircraft weight minus wing (N) [Estimated for A320 class]
@@ -50,17 +51,17 @@ W_wing = 50000;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A3
 W_fuel = 150000;    % Fuel weight (N) [Estimated for medium range]
 
 % Structures parameters
-MTOW = (W_AminusW + W_wing + W_fuel) / 9.81; % kg
-ZFW = (W_AminusW + W_wing) / 9.81;           % kg
-S_ref = 122.6;      % Wing reference area (m^2) [A320 typical value]
+MTOW = (W_AminusW + 2*W_wing + W_fuel) / 9.81; % kg
+ZFW = (W_AminusW + 2*W_wing) / 9.81;           % kg
+S_ref = (c_r + c_k) * b_k + (c_k + c_t) * (b/2 - b_k); % Area
 
 % Airfoil shape (CST parameters) - Source: Baseline airfoil from assignment
 % Thickness-to-chord ratio: 0.13 [Specification]
 CST = [0.2171 0.3450 0.2975 0.2685 0.2893 -0.1299 -0.2388 -0.1635 -0.0476 0.0797];
 
 % Spar and tank
-spar_locs = [0.15, 0.65];  % Front and rear spar locations [% chord, typical wing box]
-tank_limits = [0.1, 0.9];  % Fuel tank spanwise limits [% half-span, typical]
+spar_locs = [0.2, 0.6];  % Front and rear spar locations [% chord, typical wing box]
+tank_limits = [0, 0.85];  % Fuel tank spanwise limits [% half-span, typical]
 
 % Engine data
 engine_data.count = 1;      % Engines per half-wing [Standard twin-engine config]
@@ -105,7 +106,7 @@ plot_wing(b, c_r, c_k, c_t, b_k, sweep_te_k, dihedral);
 plot_airfoil(CST);
 
 % Evaluate fuel tank volume (performance)
-W_fuel = performance(b, c_r, c_k, c_t, b_k, tank_limits);
+W_fuel = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits);
 fprintf('Initial fuel capacity: %.2f kg\n', W_fuel / 9.81);
 
 %% ============================================================
@@ -189,6 +190,7 @@ W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
 
 fprintf('\n========== MDO ANALYSIS RESULTS ==========\n');
 fprintf('Wing Weight:        %.2f kg\n', W_wing_new / 9.81);
+fprintf('Total Aircraft Weight: %.2f kg\n', MTOW);
 fprintf('Fuel Capacity:      %.2f kg\n', W_fuel / 9.81);
 fprintf('Lift Coefficient:   %.4f\n', Cl);
 fprintf('Drag Coefficient:   %.4f\n', Cd);
