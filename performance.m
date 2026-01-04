@@ -18,7 +18,7 @@ function W_fuel = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits)
 rho_fuel = 804; % Jet A-1 fuel density
 
 % Airfoil data file
-filename = 'b737a.dat';
+filename = 'optimized_airfoil.dat';
 
 % Calculate volume using new function
 [Vol_full_one_wing, ~, ~] = calculate_wing_tank_volume(c_r, c_k, c_t, b_k, b, filename, spar_locs(1), spar_locs(2));
