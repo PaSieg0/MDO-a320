@@ -88,7 +88,7 @@ options = optimoptions('fmincon', ...
     'PlotFcn', @optimplotfval);
 
 % Run optimization (unconstrained except for bounds)
-[x_opt, fval, exitflag, output] = fmincon(objFun, x0, [], [], [], [], lb, ub, [], options);
+[x_opt, fval, exitflag, output] = fmincon(objFun, x0, [], [], [], [], lb, ub, @constraints, options);
 
 %%  SECTION 5: DISPLAY OPTIMIZATION RESULTS
 

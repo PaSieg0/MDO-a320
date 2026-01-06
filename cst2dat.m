@@ -46,7 +46,6 @@ function cst2dat(A, filename, n_points)
     end
     
     fclose(fid);
-    fprintf('Airfoil data written to: %s\n', filepath);
 end
 
 function y = cst_curve(x, A)

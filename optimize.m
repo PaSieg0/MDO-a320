@@ -52,8 +52,8 @@ C_T_ref = 1.8639e-4;    % Reference specific fuel consumption (1/s)
 %% SECTION 3: INITIAL GUESS VALUES FOR WEIGHTS
 
 % Weight breakdown (in Newtons)
-W_wing = 60000;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
-W_fuel = 150000;    % Fuel weight (N) [Estimated for medium range]
+W_wing = 6081.08*9.81;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
+W_fuel = 16275.44*9.81;    % Fuel weight (N) [Estimated for medium range]
 
 %%  SECTION 4: START OF OPTIMIZER LOOP
 
@@ -83,8 +83,7 @@ h_cr_ref = h_cr;        % Reference cruise altitude (m)
 % plot_airfoil(CST);
 
 % Evaluate fuel tank volume (performance)
-W_fuel = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits);
-fprintf('Initial fuel capacity: %.2f kg\n', W_fuel / 9.81);
+% W_fuel = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits);
 
 %% SECTION 5: MDA LOOP FOR WING WEIGHT CONVERGENCE
 
@@ -94,11 +93,8 @@ tol = 0.001;  % 0.1% convergence tolerance
 converged = false;
 iter = 0;
 
-fprintf('\n========== STARTING MDO CONVERGENCE LOOP ==========\n');
-
 while ~converged && iter < max_iter
     iter = iter + 1;
-    fprintf('\n--- Iteration %d ---\n', iter);
     
     W_wing_old = W_wing;
     
@@ -117,12 +113,9 @@ while ~converged && iter < max_iter
                             'a320_main');
     
     err_wing = abs(W_wing_new - W_wing_old) / W_wing_old;
-    
-    fprintf('  W_wing: %.2f kg (change: %.2f%%)\n', W_wing_new/9.81, err_wing*100);
-    
+        
     if err_wing < tol
         converged = true;
-        fprintf('>>> CONVERGED after %d iterations <<<\n', iter);
     end
     
     % Update for next iteration
@@ -130,12 +123,6 @@ while ~converged && iter < max_iter
     MTOW = (W_AminusW + 2*W_wing + W_fuel) / 9.81;
     ZFW = (W_AminusW + 2*W_wing) / 9.81;
 end
-
-if ~converged
-    fprintf('>>> WARNING: Did not converge after %d iterations <<<\n', max_iter);
-end
-
-fprintf('===================================================\n\n');
 
 %% SECTION 6: FINAL PERFORMANCE CALCULATION
 
@@ -157,4 +144,7 @@ W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
     W_start_cr, W_end_cr, W_TO_max, ...
     V_cr_ref, h_cr_ref, C_T_ref);
 
+fprintf('Range: %.2f km\n', Range / 1000);
+fprintf('Wing weight: %.2f kg\n', W_wing_new / 9.81);
+fprintf('Fuel weight: %.2f kg\n', W_fuel / 9.81);
 end
