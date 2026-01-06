@@ -91,12 +91,27 @@ AC.Aero.CL = Required_Lift / (q * S_wing);
 originalDir = pwd;
 loadsPath = fileparts(mfilename('fullpath'));
 q3dPath = fullfile(loadsPath, 'Q3D');
+
+% Ensure we're in the Q3D directory before calling the solver
 if exist(q3dPath, 'dir')
     cd(q3dPath);
+else
+    error('Q3D path does not exist: %s', q3dPath);
+end
+
+% Verify Storage folder exists
+storagePath = fullfile(q3dPath, 'Storage');
+if ~exist(storagePath, 'dir')
+    mkdir(storagePath);
 end
 
 %% Run the aerodynamic solver
-Res = Q3D_solver(AC);
+try
+    Res = Q3D_solver(AC);
+catch ME
+    cd(originalDir);
+    rethrow(ME);
+end
 
 % Return to original directory
 cd(originalDir);

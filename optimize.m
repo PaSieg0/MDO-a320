@@ -1,13 +1,15 @@
 function [Range] = optimize(x)
 % OPTIMIZE Wrapper function to run MDO analysis for given design variables
 % Extract design variables from input vector x
+% x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:10)]
 b = x(1);           % Total wingspan (m)
 c_r = x(2);         % Root chord (m)
 c_k = x(3);         % Kink chord (m)
 c_t = x(4);         % Tip chord (m)
 M_cr = x(5);        % Cruise Mach number [-]
 h_cr = x(6);        % Cruise altitude (m)
-CST = x(7:16);      % CST airfoil parameters (10 values)
+W_fuel = x(7);      % Fuel weight (N)
+CST = x(8:17);      % CST airfoil parameters (10 values)
 
 %%  SECTION 1: CONSTANT VALUES
 b_k = 4.36 + 3.95/2;          % Spanwise location of kink (m) [Estimated, drawing]
@@ -53,7 +55,7 @@ C_T_ref = 1.8639e-4;    % Reference specific fuel consumption (1/s)
 
 % Weight breakdown (in Newtons)
 W_wing = 6081.08*9.81;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
-W_fuel = 16275.44*9.81;    % Fuel weight (N) [Estimated for medium range]
+% W_fuel is now a design variable extracted from x(7)
 
 %%  SECTION 4: START OF OPTIMIZER LOOP
 
@@ -82,14 +84,11 @@ h_cr_ref = h_cr;        % Reference cruise altitude (m)
 % plot_wing(b, c_r, c_k, c_t, b_k, sweep_te_k, dihedral);
 % plot_airfoil(CST);
 
-% Evaluate fuel tank volume (performance)
-% W_fuel = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits);
-
 %% SECTION 5: MDA LOOP FOR WING WEIGHT CONVERGENCE
 
 % Convergence parameters
 max_iter = 20;
-tol = 0.001;  % 0.1% convergence tolerance
+tol = 0.01;  % 1% convergence tolerance
 converged = false;
 iter = 0;
 
@@ -126,6 +125,11 @@ end
 
 %% SECTION 6: FINAL PERFORMANCE CALCULATION
 
+% Clear any file handles and pause briefly to allow Windows to release file locks
+% This is needed because Q3D_solver creates temporary files that may not be
+% immediately released on Windows systems
+pause(0.1);
+
 % Aerodynamic analysis
 [Cl, Cd] = aero(sweep_te_k, b_k, dihedral, twist_r, twist_k, twist_t,... 
                 M_cr, W_AminusW, h_cr,...
@@ -144,7 +148,7 @@ W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
     W_start_cr, W_end_cr, W_TO_max, ...
     V_cr_ref, h_cr_ref, C_T_ref);
 
-fprintf('Range: %.2f km\n', Range / 1000);
-fprintf('Wing weight: %.2f kg\n', W_wing_new / 9.81);
-fprintf('Fuel weight: %.2f kg\n', W_fuel / 9.81);
+fprintf('b=%.2f c_r=%.2f c_k=%.2f c_t=%.2f M=%.3f h=%.0f W_f=%.0f\n', b, c_r, c_k, c_t, M_cr, h_cr, W_fuel/9.81);
+fprintf('R=%.0fkm W_w=%.0fkg L/D=%.2f MTOW=%.0fkg\n', Range/1000, W_wing_new/9.81, L_D_ratio, MTOW);
+
 end

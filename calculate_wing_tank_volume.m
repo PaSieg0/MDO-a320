@@ -69,11 +69,15 @@ function [Vol_Total, Vol_Inner, Vol_Outer] = calculate_wing_tank_volume( ...
     % 5. Calculate Volume of Outer Section (Kink -> Tip)
     Vol_Outer = (Au * delta_xc * l_outer / 3) * (c_k^2 + c_k*c_t + c_t^2);
     
-    %factor to account for structural components
+    % Factor to account for structural components (ribs, spars, etc.)
     n_struct = 0.93;
 
-    % 6. Total Volume (One Wing)
-    Vol_Total = n_struct*(Vol_Inner + Vol_Outer);
+    % 6. Apply structural factor to both sections
+    Vol_Inner = n_struct * Vol_Inner;
+    Vol_Outer = n_struct * Vol_Outer;
+
+    % 7. Total Volume (One Wing)
+    Vol_Total = Vol_Inner + Vol_Outer;
 
 end
 

@@ -64,7 +64,7 @@ AC.Wing.Airfoils   = [CST;
 AC.Wing.eta = [0;b_k/(b/2);1];  % Spanwise location of the airfoil sections
 
 % Analysis settings
-AC.Visc  = 1;              % 0 for inviscid (potential flow) analysis
+AC.Visc  = 1;              % 0 for inviscid, 1 for viscous analysis
 AC.Aero.MaxIterIndex = 150;
 
 % Flight Condition using calculated atmospheric properties
@@ -91,12 +91,49 @@ AC.Aero.CL = Required_Lift / (q * S_wing);
 originalDir = pwd;
 aeroPath = fileparts(mfilename('fullpath'));
 q3dPath = fullfile(aeroPath, 'Q3D');
+
+% Ensure we're in the Q3D directory before calling the solver
 if exist(q3dPath, 'dir')
     cd(q3dPath);
+else
+    error('Q3D path does not exist: %s', q3dPath);
+end
+
+% Verify Storage folder exists and is writable
+storagePath = fullfile(q3dPath, 'Storage');
+if ~exist(storagePath, 'dir')
+    mkdir(storagePath);
+end
+
+% Kill any lingering xfoil/vgk processes that might be holding file locks
+% This is a Windows-specific workaround for file locking issues
+if ispc
+    [~, ~] = system('taskkill /F /IM xfoil.exe 2>NUL');
+    [~, ~] = system('taskkill /F /IM vgk.exe 2>NUL');
+    [~, ~] = system('taskkill /F /IM vgkcon.exe 2>NUL');
+    pause(0.2);  % Brief pause to allow file handles to release
+end
+
+% Clean up any temporary files that might be locked
+tempFiles = {'XFOILinput.dat', 'Xfout.dat', 'VGKconR.dat'};
+for i = 1:length(tempFiles)
+    tf = fullfile(storagePath, tempFiles{i});
+    if exist(tf, 'file')
+        try
+            delete(tf);
+        catch
+            % Ignore if file can't be deleted
+        end
+    end
 end
 
 %% Run the aerodynamic solver
-Res = Q3D_solver(AC);
+try
+    Res = Q3D_solver(AC);
+catch ME
+    cd(originalDir);
+    rethrow(ME);
+end
 
 % Return to original directory
 cd(originalDir);
