@@ -1,7 +1,7 @@
 function [Range] = optimize(x)
 % OPTIMIZE Wrapper function to run MDO analysis for given design variables
 % Extract design variables from input vector x
-% x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:10)]
+% x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:12)]
 b = x(1);           % Total wingspan (m)
 c_r = x(2);         % Root chord (m)
 c_k = x(3);         % Kink chord (m)
@@ -9,7 +9,7 @@ c_t = x(4);         % Tip chord (m)
 M_cr = x(5);        % Cruise Mach number [-]
 h_cr = x(6);        % Cruise altitude (m)
 W_fuel = x(7);      % Fuel weight (N)
-CST = x(8:17);      % CST airfoil parameters (10 values)
+CST = x(8:19);      % CST airfoil parameters (12 values: 6 upper + 6 lower)
 
 %%  SECTION 1: CONSTANT VALUES
 b_k = 4.36 + 3.95/2;          % Spanwise location of kink (m) [Estimated, drawing]
@@ -30,7 +30,7 @@ n_max = 2.5;        % Maximum load factor (Structural) [CS-25 requirement]
 gamma = 1.4;        % Ratio of specific heats [-] [ISA]
 R = 287.058;        % Specific gas constant (J/kg-K) [ISA]
 
-W_AminusW = 400000; % Aircraft weight minus wing (N) [Estimated for A320 class]
+W_AminusW = 450000; % Aircraft weight minus wing (N) [Estimated for A320 class]
 
 % Spar and tank limits
 spar_locs = [0.2, 0.6];  % Front and rear spar locations [% chord, typical wing box]
@@ -54,7 +54,7 @@ C_T_ref = 1.8639e-4;    % Reference specific fuel consumption (1/s)
 %% SECTION 3: INITIAL GUESS VALUES FOR WEIGHTS
 
 % Weight breakdown (in Newtons)
-W_wing = 6081.08*9.81;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
+W_wing = 6344*9.81;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
 % W_fuel is now a design variable extracted from x(7)
 
 %%  SECTION 4: START OF OPTIMIZER LOOP

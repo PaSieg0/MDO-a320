@@ -24,13 +24,12 @@ M_cr = 0.78;        % Cruise Mach number [-] [Specification]
 h_cr = 11278.4;     % Cruise altitude (m) = 37,000 ft [Specification: 37000 ft]
 
 % Airfoil shape (CST parameters) - Source: Baseline airfoil from assignment
-CST = [0.1800 0.2800 0.2400 0.2200 0.2400 -0.1000 -0.1800 -0.1200 -0.0300 0.0600];
-
+CST = [0.2337, 0.0796, 0.2683, 0.0887, 0.2789, 0.3811, -0.2254, -0.1634, -0.0470, -0.4771, 0.0735, 0.3255];    % CST parameters (Upper and Lower)
 % Fuel weight (in Newtons) - Initial guess
 W_fuel = 16275.44 * 9.81;  % Fuel weight (N) [Estimated for medium range]
 
 % Construct design vector for optimization
-% x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:10)]
+% x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:12)]
 x0 = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST];
 
 %%  SECTION 2: DEFINE BOUNDS FOR OPTIMIZATION
@@ -40,22 +39,22 @@ b_lb = 28.0;        % Minimum wingspan (m)
 c_r_lb = 5.0;       % Minimum root chord (m)
 c_k_lb = 2.5;       % Minimum kink chord (m)
 c_t_lb = 1.0;       % Minimum tip chord (m)
-M_cr_lb = 0.70;     % Minimum cruise Mach
-h_cr_lb = 9000;     % Minimum cruise altitude (m)
+M_cr_lb = 0.9 * M_cr;     % Minimum cruise Mach
+h_cr_lb = 0.9 * h_cr;     % Minimum cruise altitude (m)
 W_fuel_lb = 5000 * 9.81;  % Minimum fuel weight (N) ~5000 kg
-CST_lb = [-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5];
+CST_lb = [-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5];
 
 lb = [b_lb, c_r_lb, c_k_lb, c_t_lb, M_cr_lb, h_cr_lb, W_fuel_lb, CST_lb];
 
 % Upper bounds for design variables
-b_ub = 40.0;        % Maximum wingspan (m)
+b_ub = 36.0;        % Maximum wingspan (m)
 c_r_ub = 9.0;       % Maximum root chord (m)
 c_k_ub = 5.0;       % Maximum kink chord (m)
 c_t_ub = 2.5;       % Maximum tip chord (m)
 M_cr_ub = 0.82;     % Maximum cruise Mach
-h_cr_ub = 13000;    % Maximum cruise altitude (m)
+h_cr_ub = 1.1 * h_cr;    % Maximum cruise altitude (m)
 W_fuel_ub = 25000 * 9.81;  % Maximum fuel weight (N) ~25000 kg
-CST_ub = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+CST_ub = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
 
 ub = [b_ub, c_r_ub, c_k_ub, c_t_ub, M_cr_ub, h_cr_ub, W_fuel_ub, CST_ub];
 
@@ -112,9 +111,9 @@ fprintf('  Cruise Mach:     %.3f (change: %+.2f%%)\n', x_opt(5), (x_opt(5)-x0(5)
 fprintf('  Cruise Altitude: %.0f m (change: %+.2f%%)\n', x_opt(6), (x_opt(6)-x0(6))/x0(6)*100);
 fprintf('  Fuel Weight:     %.2f kg (change: %+.2f%%)\n', x_opt(7)/9.81, (x_opt(7)-x0(7))/x0(7)*100);
 fprintf('\nCST Parameters (Upper Surface):\n');
-fprintf('  [%.4f, %.4f, %.4f, %.4f, %.4f]\n', x_opt(8:12));
+fprintf('  [%.4f, %.4f, %.4f, %.4f, %.4f, %.4f]\n', x_opt(8:13));
 fprintf('CST Parameters (Lower Surface):\n');
-fprintf('  [%.4f, %.4f, %.4f, %.4f, %.4f]\n', x_opt(13:17));
+fprintf('  [%.4f, %.4f, %.4f, %.4f, %.4f, %.4f]\n', x_opt(14:19));
 fprintf('\nPerformance:\n');
 fprintf('  Initial Range: %.2f km\n', Range_initial / 1000);
 fprintf('  Optimal Range: %.2f km\n', -fval / 1000);

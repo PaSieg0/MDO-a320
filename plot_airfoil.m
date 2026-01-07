@@ -21,27 +21,16 @@ n_half = n_total / 2;
 CST_upper = CST(1:n_half);
 CST_lower = CST(n_half+1:end);
 
-% Class function (defines sharp trailing edge)
-C = x.^0.5 .* (1 - x);
+% Use D_airfoil2 to get airfoil coordinates
+Au = CST_upper;  % Upper surface Bernstein parameters
+Al = CST_lower;  % Lower surface Bernstein parameters
+X = x';          % X-coordinates as column vector
 
-% Calculate upper surface
-n_order = length(CST_upper) - 1;
-S_upper = zeros(size(x));
-for i = 0:n_order
-    K = factorial(n_order) / (factorial(i) * factorial(n_order - i));
-    B = K .* x.^i .* (1 - x).^(n_order - i);
-    S_upper = S_upper + CST_upper(i+1) * B;
-end
-y_upper = C .* S_upper;
+[Xtu, Xtl, ~, ~, ~, ~] = D_airfoil2(Au, Al, X);
 
-% Calculate lower surface
-S_lower = zeros(size(x));
-for i = 0:n_order
-    K = factorial(n_order) / (factorial(i) * factorial(n_order - i));
-    B = K .* x.^i .* (1 - x).^(n_order - i);
-    S_lower = S_lower + CST_lower(i+1) * B;
-end
-y_lower = C .* S_lower;
+% Extract y coordinates from D_airfoil2 output
+y_upper = Xtu(:, 2)';
+y_lower = Xtl(:, 2)';
 
 % Create figure
 figure('Name', 'Airfoil Shape', 'NumberTitle', 'off');
