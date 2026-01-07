@@ -29,7 +29,7 @@ function [R, W_fuel, C_T] = calculatePerformance(V, h, L_D_ratio, W_start_cr, W_
 % This factor accounts for performance degradation of the engine when
 % operating outside the reference flight condition.
 % Source: Page 5 of the assignment document.
-eta = exp(-((V - V_cr_ref)^2 / 2.70^2) - ((h - h_cr_ref)^2 / 22500^2));
+eta = exp(-((V - V_cr_ref)^2 / (2*70^2)) - ((h - h_cr_ref)^2 / (2*2500^2)));
 
 %% 2. Calculate Actual Specific Fuel Consumption (C_T)
 % Source: Page 5 of the assignment document.
