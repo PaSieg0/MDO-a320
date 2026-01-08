@@ -86,14 +86,17 @@ fprintf('========== STARTING OPTIMIZATION ==========\n');
 % Define objective function (negative range for maximization)
 objFun = @(x) -optimize(x);
 
-% Optimization options
+% Optimization options - tuned for speed
 options = optimoptions('fmincon', ...
+    'Algorithm', 'sqp', ...             % SQP is fast and handles constraints well
     'Display', 'iter', ...
-    'MaxIterations', 50, ...
-    'MaxFunctionEvaluations', 500, ...
-    'OptimalityTolerance', 1e-4, ...
-    'StepTolerance', 1e-6, ...
-    'FiniteDifferenceStepSize', 1e-4, ...
+    'MaxIterations', 30, ...            % Reduced from 50
+    'MaxFunctionEvaluations', 200, ...  % Reduced from 500
+    'OptimalityTolerance', 1e-3, ...    % Looser tolerance (was 1e-4)
+    'StepTolerance', 1e-4, ...          % Looser tolerance (was 1e-6)
+    'ConstraintTolerance', 1e-2, ...    % Slightly looser (was 1e-3)
+    'FiniteDifferenceStepSize', 1e-3, ...  % Larger step (was 1e-4)
+    'FiniteDifferenceType', 'forward', ... % Forward is 2x faster than central
     'PlotFcn', @optimplotfval);
 
 % Run optimization (unconstrained except for bounds)

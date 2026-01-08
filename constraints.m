@@ -1,12 +1,21 @@
 function [c,ceq] = constraints(x)
     % Extract design variables
-    % x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:10)]
+    % x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:12)]
         b = x(1);           % Total wingspan (m)
         c_r = x(2);         % Root chord (m)
         c_k = x(3);         % Kink chord (m)
         c_t = x(4);         % Tip chord (m)
         W_fuel = x(7);      % Fuel weight (N) - design variable
+        CST = x(8:19);      % CST airfoil parameters
+        
         global W_wing
+        % Fallback if W_wing is not set
+        if isempty(W_wing)
+            W_wing = 6344 * 9.81;  % Default value
+        end
+        
+        % Generate airfoil file for current CST (needed for fuel tank volume calc)
+        cst2dat(CST, 'EMWET/optimized_airfoil');
         
         % Constant values
         b_k = 4.36 + 3.95/2;  % Spanwise location of kink (m)
@@ -34,16 +43,18 @@ function [c,ceq] = constraints(x)
         c1 = WL_current - WL_orig;
         
         % Fuel weight constraint
-        W_fuel_max = 15981.29 * 9.81; % Maximum fuel weight for original design (N)
+        W_fuel_max = 16084.17 * 9.81; % Maximum fuel weight for original design (N)
         % Use performance function to calculate actual fuel capacity
         spar_locs = [0.2, 0.6];  % Front and rear spar locations
         tank_limits = [0, 0.85]; % Fuel tank spanwise limits
         
         % Calculate fuel capacity for current design
+        fprintf('b=%.2f c_r=%.2f c_k=%.2f c_t=%.2f\n', b, c_r, c_k, c_t);
         W_fuel_max_current = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits);
         
         % Fuel capacity constraint: W_fuel <= min(W_fuel_max_current, W_fuel_max)
         % c2 > 0 means constraint violated (fuel exceeds tank capacity)
+        fprintf('Max Fuel Capacity Current Design: %.2f kg\n', W_fuel_max_current/9.81);
         c2 = W_fuel - min(W_fuel_max_current, W_fuel_max);
 
         % Inequality constraints

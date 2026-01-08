@@ -11,7 +11,7 @@ if isempty(cache_count)
 end
 
 % Check if this input has been evaluated before
-cache_tol = 1e-10;  % Tolerance for matching cached inputs
+cache_tol = 1e-5;  % Tolerance for matching cached inputs
 for i = 1:size(cache_x, 1)
     if max(abs(cache_x(i,:) - x(:)')) < cache_tol
         Range = cache_Range(i);
@@ -168,12 +168,6 @@ W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
 [Range, ~, ~] = calculatePerformance(V_cr, h_cr, L_D_ratio, ...
     W_start_cr, W_end_cr, W_TO_max, ...
     V_cr_ref, h_cr_ref, C_T_ref);
-
-% --- STORE RESULT IN CACHE ---
-cache_count = cache_count + 1;
-cache_x(cache_count, :) = x(:)';
-cache_Range(cache_count) = Range;
-fprintf('[CACHE STORE] Evaluation #%d stored\n', cache_count);
 
 fprintf('b=%.2f c_r=%.2f c_k=%.2f c_t=%.2f M=%.3f h=%.0f W_f=%.0f\n', b, c_r, c_k, c_t, M_cr, h_cr, W_fuel/9.81);
 fprintf('R=%.0fkm W_w=%.0fkg L/D=%.2f MTOW=%.0fkg\n', Range/1000, W_wing/9.81, L_D_ratio, MTOW);

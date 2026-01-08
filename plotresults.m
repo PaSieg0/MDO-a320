@@ -22,15 +22,15 @@ orig.CST = [0.2337, 0.0796, 0.2683, 0.0887, 0.2789, 0.3811, ...
            -0.2254, -0.1634, -0.0470, -0.4771, 0.0735, 0.3255];
 
 %% OPTIMIZED DESIGN
-opt.b = 33.21;          % Wingspan (m)
-opt.c_r = 7.10;         % Root chord (m)
-opt.c_k = 3.80;         % Kink chord (m)
-opt.c_t = 1.60;         % Tip chord (m)
-opt.M_cr = 0.782;       % Cruise Mach number
-opt.h_cr = 11267;       % Cruise altitude (m)
-opt.W_fuel = 16275.69 * 9.81;  % Fuel weight (N)
-opt.CST = [0.1731, 0.0942, 0.2982, 0.1242, 0.2848, 0.3828, ...
-          -0.2023, -0.1676, -0.0620, -0.3735, 0.0652, 0.2221];
+opt.b = 32.56;          % Wingspan (m)
+opt.c_r = 7.48;         % Root chord (m)
+opt.c_k = 3.84;         % Kink chord (m)
+opt.c_t = 1.46;         % Tip chord (m)
+opt.M_cr = 0.790;       % Cruise Mach number
+opt.h_cr = 11486;       % Cruise altitude (m)
+opt.W_fuel = 16083 * 9.81;  % Fuel weight (N)
+opt.CST = [0.2242, 0.0806, 0.2709, 0.0902, 0.2794, 0.3811, ...
+          -0.2201, -0.1599, -0.0421, -0.3510, 0.0747, 0.4682];
 
 %% Common geometry parameters
 b_k = 4.36 + 3.95/2;    % Kink spanwise location (m)
