@@ -1,5 +1,25 @@
 function [Range] = optimize(x)
 % OPTIMIZE Wrapper function to run MDO analysis for given design variables
+% Includes caching to avoid redundant calculations during optimization
+
+% --- CACHING MECHANISM ---
+persistent cache_x cache_Range cache_count;
+if isempty(cache_count)
+    cache_count = 0;
+    cache_x = [];
+    cache_Range = [];
+end
+
+% Check if this input has been evaluated before
+cache_tol = 1e-10;  % Tolerance for matching cached inputs
+for i = 1:size(cache_x, 1)
+    if max(abs(cache_x(i,:) - x(:)')) < cache_tol
+        Range = cache_Range(i);
+        fprintf('[CACHE HIT] Returning cached result for evaluation #%d\n', i);
+        return;
+    end
+end
+
 % Extract design variables from input vector x
 % x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:12)]
 b = x(1);           % Total wingspan (m)
@@ -54,6 +74,7 @@ C_T_ref = 1.8639e-4;    % Reference specific fuel consumption (1/s)
 %% SECTION 3: INITIAL GUESS VALUES FOR WEIGHTS
 
 % Weight breakdown (in Newtons)
+global W_wing
 W_wing = 6344*9.81;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
 % W_fuel is now a design variable extracted from x(7)
 
@@ -133,13 +154,13 @@ pause(0.1);
 % Aerodynamic analysis
 [Cl, Cd] = aero(sweep_te_k, b_k, dihedral, twist_r, twist_k, twist_t,... 
                 M_cr, W_AminusW, h_cr,...
-                b, c_r, c_k, c_t, CST, W_wing_new, W_fuel);
+                b, c_r, c_k, c_t, CST, W_wing, W_fuel);
 
 % Calculate L/D ratio from aerodynamic coefficients
 L_D_ratio = Cl / Cd;
 
 % Define weights for cruise segment
-W_TO_max = W_AminusW + 2 * W_wing_new + W_fuel;
+W_TO_max = W_AminusW + 2 * W_wing + W_fuel;
 W_start_cr = W_TO_max;  % Weight at start of cruise (after taxi, takeoff, climb)
 W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
 
@@ -148,7 +169,13 @@ W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
     W_start_cr, W_end_cr, W_TO_max, ...
     V_cr_ref, h_cr_ref, C_T_ref);
 
+% --- STORE RESULT IN CACHE ---
+cache_count = cache_count + 1;
+cache_x(cache_count, :) = x(:)';
+cache_Range(cache_count) = Range;
+fprintf('[CACHE STORE] Evaluation #%d stored\n', cache_count);
+
 fprintf('b=%.2f c_r=%.2f c_k=%.2f c_t=%.2f M=%.3f h=%.0f W_f=%.0f\n', b, c_r, c_k, c_t, M_cr, h_cr, W_fuel/9.81);
-fprintf('R=%.0fkm W_w=%.0fkg L/D=%.2f MTOW=%.0fkg\n', Range/1000, W_wing_new/9.81, L_D_ratio, MTOW);
+fprintf('R=%.0fkm W_w=%.0fkg L/D=%.2f MTOW=%.0fkg\n', Range/1000, W_wing/9.81, L_D_ratio, MTOW);
 
 end
