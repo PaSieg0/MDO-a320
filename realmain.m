@@ -33,25 +33,33 @@ W_fuel = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits);
 
 % Construct design vector for optimization (ONLY c_r, c_k, c_t, W_fuel)
 % x = [c_r, c_k, c_t, W_fuel]
-x0 = [c_r, c_k, c_t, W_fuel];
+x0 = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST];
 
 %%  SECTION 2: DEFINE BOUNDS FOR OPTIMIZATION
 
 % Lower bounds for design variables
+b_lb = 28.0;       % Minimum wingspan (m)
 c_r_lb = c_k;       % Minimum root chord (m)
 c_k_lb = c_t;       % Minimum kink chord (m)
 c_t_lb = 0.5;       % Minimum tip chord (m)
+M_cr_lb = 0.9*M_cr;   % Minimum cruise Mach number
+h_cr_lb = 0.9*h_cr;    % Minimum cruise altitude (m)
 W_fuel_lb = 0.5 * W_fuel;  % Minimum fuel weight (N) ~5000 kg
+CST_lb = -0.5 * ones(1,12); % Lower bounds for CST parameters
 
-lb = [c_r_lb, c_k_lb, c_t_lb, W_fuel_lb];
+lb = [b_lb, c_r_lb, c_k_lb, c_t_lb, M_cr_lb, h_cr_lb, W_fuel_lb, CST_lb];
 
 % Upper bounds for design variables
+b_ub = 36.0;       % Maximum wingspan (m)
 c_r_ub = 9.39;       % Maximum root chord (m)
 c_k_ub = c_r;       % Maximum kink chord (m)
 c_t_ub = c_k;       % Maximum tip chord (m)
+M_cr_ub = 0.82;   % Maximum cruise Mach number
+h_cr_ub = 1.1*h_cr;    % Maximum cruise altitude (m)
 W_fuel_ub = 1.5 * W_fuel;  % Maximum fuel weight (N) ~25000 kg
+CST_ub = 0.5 * ones(1,12); % Upper bounds for CST parameters
 
-ub = [c_r_ub, c_k_ub, c_t_ub, W_fuel_ub];
+ub = [b_ub, c_r_ub, c_k_ub, c_t_ub, M_cr_ub, h_cr_ub, W_fuel_ub, CST_ub];
 
 %%  SECTION 3: RUN INITIAL EVALUATION
 
@@ -61,10 +69,14 @@ fprintf('Running initial design point...\n');
 Range_initial = optimize(x0);
 
 fprintf('\nInitial Design Results:\n');
-fprintf('  Root Chord:      %.2f m\n', x0(1));
-fprintf('  Kink Chord:      %.2f m\n', x0(2));
-fprintf('  Tip Chord:       %.2f m\n', x0(3));
-fprintf('  Fuel Weight:     %.2f kg\n', x0(4) / 9.81);
+fprintf('  Wingspan:        %.2f m\n', x0(1));
+fprintf('  Root Chord:      %.2f m\n', x0(2));
+fprintf('  Kink Chord:      %.2f m\n', x0(3));
+fprintf('  Tip Chord:       %.2f m\n', x0(4));
+fprintf('  Cruise Mach:     %.3f\n', x0(5));
+fprintf('  Cruise Altitude: %.0f m\n', x0(6));
+fprintf('  Fuel Weight:     %.2f kg\n', x0(7) / 9.81);
+fprintf('  CST Parameters:  '); fprintf('%.4f ', x0(8:end)); fprintf('\n');
 fprintf('  Range:           %.2f km\n', Range_initial / 1000);
 fprintf('================================================\n\n');
 
@@ -85,7 +97,7 @@ options = optimoptions('fmincon', ...
     'StepTolerance', 1e-4, ...
     'ConstraintTolerance', 1e-2, ...
     'FiniteDifferenceStepSize', 1e-6, ...  % Let MATLAB choose the step size, which can be better for scaled problems
-    'FiniteDifferenceType', 'forward', ...
+    'FiniteDifferenceType', 'central', ...
     'PlotFcn', {@optimplotfval, @optimplotconstrviolation, @optimplotstepsize}, ... % Added step size plot
     'UseParallel', true);                        % Use if you have the Parallel Computing Toolbox
 
@@ -101,10 +113,14 @@ fprintf('Exit Flag: %d\n', exitflag);
 fprintf('Iterations: %d\n', output.iterations);
 fprintf('Function Evaluations: %d\n', output.funcCount);
 fprintf('\nOptimal Design Variables:\n');
-fprintf('  Root Chord:      %.2f m (change: %+.2f%%)\n', x_opt(1), (x_opt(1)-x0(1))/x0(1)*100);
-fprintf('  Kink Chord:      %.2f m (change: %+.2f%%)\n', x_opt(2), (x_opt(2)-x0(2))/x0(2)*100);
-fprintf('  Tip Chord:       %.2f m (change: %+.2f%%)\n', x_opt(3), (x_opt(3)-x0(3))/x0(3)*100);
-fprintf('  Fuel Weight:     %.2f kg (change: %+.2f%%)\n', x_opt(4)/9.81, (x_opt(4)-x0(4))/x0(4)*100);
+fprintf('  Wingspan:        %.2f m (change: %+.2f%%)\n', x_opt(1), (x_opt(1)-x0(1))/x0(1)*100);
+fprintf('  Root Chord:      %.2f m (change: %+.2f%%)\n', x_opt(2), (x_opt(2)-x0(2))/x0(2)*100);
+fprintf('  Kink Chord:      %.2f m (change: %+.2f%%)\n', x_opt(3), (x_opt(3)-x0(3))/x0(3)*100);
+fprintf('  Tip Chord:       %.2f m (change: %+.2f%%)\n', x_opt(4), (x_opt(4)-x0(4))/x0(4)*100);
+fprintf('  Cruise Mach:     %.3f (change: %+.2f%%)\n', x_opt(5), (x_opt(5)-x0(5))/x0(5)*100);
+fprintf('  Cruise Altitude: %.0f m (change: %+.2f%%)\n', x_opt(6), (x_opt(6)-x0(6))/x0(6)*100);
+fprintf('  Fuel Weight:     %.2f kg (change: %+.2f%%)\n', x_opt(7)/9.81, (x_opt(7)-x0(7))/x0(7)*100);
+fprintf('  CST Parameters:  '); fprintf('%.4f ', x_opt(8:end)); fprintf('\n');
 fprintf('\nPerformance:\n');
 fprintf('  Initial Range: %.2f km\n', Range_initial / 1000);
 fprintf('  Optimal Range: %.2f km\n', -fval / 1000);

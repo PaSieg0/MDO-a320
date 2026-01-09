@@ -1,22 +1,25 @@
 function [Range] = optimize(x)
-fprintf('%f %f %f %f\n', x)
 try
 % OPTIMIZE Wrapper function to run MDO analysis for given design variables
 % Includes caching to avoid redundant calculations during optimization
 
+
 % Extract design variables from input vector x
-% x = [c_r, c_k, c_t, W_fuel] (PLANFORM ONLY, span and operating conditions fixed)
-c_r = x(1);         % Root chord (m)
-c_k = x(2);         % Kink chord (m)
-c_t = x(3);         % Tip chord (m)
-W_fuel = x(4);      % Fuel weight (N)
-% Fixed parameters
-b = 34.0;           % Total wingspan (m)
-M_cr = 0.78;        % Cruise Mach number [-]
-h_cr = 11278.4;     % Cruise altitude (m)
-% Fixed CST airfoil parameters (not optimized)
-CST = [0.2337, 0.0796, 0.2683, 0.0887, 0.2789, 0.3811, -0.2254, -0.1634, -0.0470, -0.4771, 0.0735, 0.3255];
+% x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:12)]
+b = x(1);           % Total wingspan (m)
+c_r = x(2);         % Root chord (m)
+c_k = x(3);         % Kink chord (m)
+c_t = x(4);         % Tip chord (m)
+M_cr = x(5);        % Cruise Mach number [-]
+h_cr = x(6);        % Cruise altitude (m)
+W_fuel = x(7);      % Fuel weight (N)
+CST = x(8:19);      % CST airfoil parameters (12 values: 6 upper + 6 lower)
 CST = reshape(CST, 1, []); % Defensive: always row vector
+
+disp('Variables:');
+disp(['b = ', num2str(b), ', c_r = ', num2str(c_r), ', c_k = ', num2str(c_k), ', c_t = ', num2str(c_t), ...
+    ', M_cr = ', num2str(M_cr), ', h_cr = ', num2str(h_cr), ', W_fuel = ', num2str(W_fuel)]);
+disp(['CST = [', num2str(CST), ']']);
 
 %%  SECTION 1: CONSTANT VALUES
 b_k = 4.36 + 3.95/2;          % Spanwise location of kink (m) [Estimated, drawing]
@@ -63,7 +66,7 @@ C_T_ref = 1.8639e-4;    % Reference specific fuel consumption (1/s)
 % Weight breakdown (in Newtons)
 global W_wing
 W_wing = 6344*9.81;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
-% W_fuel is now a design variable extracted from x(4)
+% W_fuel is now a design variable extracted from x(7)
 
 %%  SECTION 4: START OF OPTIMIZER LOOP
 
