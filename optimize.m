@@ -30,6 +30,7 @@ M_cr = x(5);        % Cruise Mach number [-]
 h_cr = x(6);        % Cruise altitude (m)
 W_fuel = x(7);      % Fuel weight (N)
 CST = x(8:19);      % CST airfoil parameters (12 values: 6 upper + 6 lower)
+CST = reshape(CST, 1, []); % Defensive: always row vector
 
 %%  SECTION 1: CONSTANT VALUES
 b_k = 4.36 + 3.95/2;          % Spanwise location of kink (m) [Estimated, drawing]
@@ -97,9 +98,9 @@ a_cr = sqrt(gamma * R * T_cr);  % Speed of sound at cruise altitude (m/s)
 V_cr = M_cr * a_cr;    % Cruise speed (m/s)
 V_MO_ref = M_MO_ref * a_cr;  % Maximum operating speed (m/s)
 
-% Engine reference conditions NEEDS CHECK
-V_cr_ref = V_cr;        % Reference cruise speed (m/s) - matches actual cruise
-h_cr_ref = h_cr;        % Reference cruise altitude (m)
+% Engine reference conditions
+V_cr_ref = 230.1563;        % Reference cruise speed (m/s) - matches actual cruise
+h_cr_ref = 1.1278e+04;        % Reference cruise altitude (m)
 
 % % Plot wing geometry for verification
 % plot_wing(b, c_r, c_k, c_t, b_k, sweep_te_k, dihedral);
@@ -156,8 +157,18 @@ pause(0.1);
                 M_cr, W_AminusW, h_cr,...
                 b, c_r, c_k, c_t, CST, W_wing, W_fuel);
 
+% Add drag contribution from aircraft minus wing (fuselage, tail, nacelles, etc.)
+% Typical A320 zero-lift drag breakdown: wing ~40%, rest ~60%
+% Estimate Cd0 contribution from non-wing components
+Cd0_rest = 0.012;  % Parasite drag coefficient for fuselage, tail, nacelles, etc.
+Cd = Cd + Cd0_rest;
+
 % Calculate L/D ratio from aerodynamic coefficients
-L_D_ratio = Cl / Cd;
+if isnan(Cd) || Cd <= 0
+    L_D_ratio = 0;
+else
+    L_D_ratio = Cl / Cd;
+end
 
 % Define weights for cruise segment
 W_TO_max = W_AminusW + 2 * W_wing + W_fuel;
