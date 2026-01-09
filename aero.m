@@ -82,9 +82,10 @@ AC.Aero.Re = (rho_cr * AC.Aero.V * MAC) / mu_cr;
 
 % Calculate the required lift coefficient (CL) for the flight condition
 W_total = W_AminusW + W_wing + W_fuel; % Total weight (N)
+W_des = (W_total * (W_total - W_fuel))^0.5; % Design weight for CL calculation (N)
 S_wing = 2 * S_half; % Total wing planform area
 q = 0.5 * rho_cr * AC.Aero.V^2; % Dynamic pressure
-Required_Lift = W_total;   % Required lift force
+Required_Lift = W_des;   % Required lift force
 AC.Aero.CL = Required_Lift / (q * S_wing);
 
 % Handle directory navigation for Q3D
