@@ -43,18 +43,16 @@ function [c,ceq] = constraints(x)
         c1 = WL_current - WL_orig;
         
         % Fuel weight constraint
-        W_fuel_max = 16084.17 * 9.81; % Maximum fuel weight for original design (N)
+        W_fuel_max = 16085 * 9.81; % Maximum fuel weight for original design (N)
         % Use performance function to calculate actual fuel capacity
         spar_locs = [0.2, 0.6];  % Front and rear spar locations
         tank_limits = [0, 0.85]; % Fuel tank spanwise limits
         
         % Calculate fuel capacity for current design
-        fprintf('b=%.2f c_r=%.2f c_k=%.2f c_t=%.2f\n', b, c_r, c_k, c_t);
         W_fuel_max_current = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits);
         
         % Fuel capacity constraint: W_fuel <= min(W_fuel_max_current, W_fuel_max)
         % c2 > 0 means constraint violated (fuel exceeds tank capacity)
-        fprintf('Max Fuel Capacity Current Design: %.2f kg\n', W_fuel_max_current/9.81);
         c2 = W_fuel - min(W_fuel_max_current, W_fuel_max);
 
         % Inequality constraints

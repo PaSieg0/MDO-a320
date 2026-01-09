@@ -1,24 +1,8 @@
 function [Range] = optimize(x)
+try
 % OPTIMIZE Wrapper function to run MDO analysis for given design variables
 % Includes caching to avoid redundant calculations during optimization
 
-% --- CACHING MECHANISM ---
-persistent cache_x cache_Range cache_count;
-if isempty(cache_count)
-    cache_count = 0;
-    cache_x = [];
-    cache_Range = [];
-end
-
-% Check if this input has been evaluated before
-cache_tol = 1e-5;  % Tolerance for matching cached inputs
-for i = 1:size(cache_x, 1)
-    if max(abs(cache_x(i,:) - x(:)')) < cache_tol
-        Range = cache_Range(i);
-        fprintf('[CACHE HIT] Returning cached result for evaluation #%d\n', i);
-        return;
-    end
-end
 
 % Extract design variables from input vector x
 % x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:12)]
@@ -183,4 +167,7 @@ W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
 fprintf('b=%.2f c_r=%.2f c_k=%.2f c_t=%.2f M=%.3f h=%.0f W_f=%.0f\n', b, c_r, c_k, c_t, M_cr, h_cr, W_fuel/9.81);
 fprintf('R=%.0fkm W_w=%.0fkg L/D=%.2f MTOW=%.0fkg\n', Range/1000, W_wing/9.81, L_D_ratio, MTOW);
 
+catch
+    Range = 0;
+end
 end
