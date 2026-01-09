@@ -53,10 +53,11 @@ function [c,ceq] = constraints(x)
         
         % Fuel capacity constraint: W_fuel <= min(W_fuel_max_current, W_fuel_max)
         % c2 > 0 means constraint violated (fuel exceeds tank capacity)
-        c2 = (W_fuel - min(W_fuel_max_current, W_fuel_max))/min(W_fuel_max_current, W_fuel_max);
+        c2 = (W_fuel - W_fuel_max_current)/W_fuel_max_current;
+        c3 = (W_fuel - W_fuel_max)/W_fuel_max;
 
         % Inequality constraints
-        c = [c1; c2];
+        c = [c1; c2; c3];
         
         % No equality constraints
         ceq = [];
