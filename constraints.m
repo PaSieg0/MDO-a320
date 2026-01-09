@@ -40,7 +40,7 @@ function [c,ceq] = constraints(x)
         % c1 > 0 means constraint violated
         WL_current = W_total / S_current;
         WL_orig = W_total / S_orig;
-        c1 = WL_current - WL_orig;
+        c1 = (WL_current - WL_orig)/WL_orig;
         
         % Fuel weight constraint
         W_fuel_max = 16085 * 9.81; % Maximum fuel weight for original design (N)
@@ -53,7 +53,7 @@ function [c,ceq] = constraints(x)
         
         % Fuel capacity constraint: W_fuel <= min(W_fuel_max_current, W_fuel_max)
         % c2 > 0 means constraint violated (fuel exceeds tank capacity)
-        c2 = W_fuel - min(W_fuel_max_current, W_fuel_max);
+        c2 = (W_fuel - min(W_fuel_max_current, W_fuel_max))/min(W_fuel_max_current, W_fuel_max);
 
         % Inequality constraints
         c = [c1; c2];
