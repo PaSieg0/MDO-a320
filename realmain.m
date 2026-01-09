@@ -38,10 +38,10 @@ x0 = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST];
 %%  SECTION 2: DEFINE BOUNDS FOR OPTIMIZATION
 
 % Lower bounds for design variables
-b_lb = 28.0;        % Minimum wingspan (m)
-c_r_lb = 5.0;       % Minimum root chord (m)
-c_k_lb = 2.5;       % Minimum kink chord (m)
-c_t_lb = 1.0;       % Minimum tip chord (m)
+b_lb = b_k;        % Minimum wingspan (m)
+c_r_lb = c_k;       % Minimum root chord (m)
+c_k_lb = c_t;       % Minimum kink chord (m)
+c_t_lb = 0.5;       % Minimum tip chord (m)
 M_cr_lb = 0.9 * M_cr;     % Minimum cruise Mach
 h_cr_lb = 0.9 * h_cr;     % Minimum cruise altitude (m)
 W_fuel_lb = 0.5 * W_fuel;  % Minimum fuel weight (N) ~5000 kg
@@ -51,9 +51,9 @@ lb = [b_lb, c_r_lb, c_k_lb, c_t_lb, M_cr_lb, h_cr_lb, W_fuel_lb, CST_lb];
 
 % Upper bounds for design variables
 b_ub = 36.0;        % Maximum wingspan (m)
-c_r_ub = 9.0;       % Maximum root chord (m)
-c_k_ub = 5.0;       % Maximum kink chord (m)
-c_t_ub = 2.5;       % Maximum tip chord (m)
+c_r_ub = 9.39;       % Maximum root chord (m)
+c_k_ub = c_r;       % Maximum kink chord (m)
+c_t_ub = c_k;       % Maximum tip chord (m)
 M_cr_ub = 0.82;     % Maximum cruise Mach
 h_cr_ub = 1.1 * h_cr;    % Maximum cruise altitude (m)
 W_fuel_ub = 1.5 * W_fuel;  % Maximum fuel weight (N) ~25000 kg
@@ -82,7 +82,6 @@ fprintf('================================================\n\n');
 %%  SECTION 4: SETUP AND RUN OPTIMIZER
 
 fprintf('========== STARTING OPTIMIZATION ==========\n');
-
 % Define objective function (negative range for maximization)
 objFun = @(x) -optimize(x);
 
@@ -90,17 +89,19 @@ objFun = @(x) -optimize(x);
 options = optimoptions('fmincon', ...
     'Algorithm', 'sqp', ...             % SQP is fast and handles constraints well
     'Display', 'iter', ...
-    'MaxIterations', 30, ...            % Reduced from 50
-    'MaxFunctionEvaluations', 200, ...  % Reduced from 500
-    'OptimalityTolerance', 1e-3, ...    % Looser tolerance (was 1e-4)
-    'StepTolerance', 1e-4, ...          % Looser tolerance (was 1e-6)
-    'ConstraintTolerance', 1e-2, ...    % Slightly looser (was 1e-3)
+    'MaxIterations', 50, ...            % Reduced from 50
+    'MaxFunctionEvaluations', 500, ...  % Reduced from 500
+    'OptimalityTolerance', 1e-4, ...    % Looser tolerance (was 1e-4)
+    'StepTolerance', 1e-5, ...          % Looser tolerance (was 1e-6)
+    'ConstraintTolerance', 1e-3, ...    % Slightly looser (was 1e-3)
     'FiniteDifferenceStepSize', 1e-3, ...  % Larger step (was 1e-4)
     'FiniteDifferenceType', 'forward', ... % Forward is 2x faster than central
     'PlotFcn', @optimplotfval);
 
+tic
 % Run optimization (unconstrained except for bounds)
 [x_opt, fval, exitflag, output] = fmincon(objFun, x0, [], [], [], [], lb, ub, @constraints, options);
+toc
 
 %%  SECTION 5: DISPLAY OPTIMIZATION RESULTS
 
@@ -109,17 +110,17 @@ fprintf('Exit Flag: %d\n', exitflag);
 fprintf('Iterations: %d\n', output.iterations);
 fprintf('Function Evaluations: %d\n', output.funcCount);
 fprintf('\nOptimal Design Variables:\n');
-fprintf('  Wingspan:        %.2f m (change: %+.2f%%)\n', x_opt(1), (x_opt(1)-x0(1))/x0(1)*100);
-fprintf('  Root Chord:      %.2f m (change: %+.2f%%)\n', x_opt(2), (x_opt(2)-x0(2))/x0(2)*100);
-fprintf('  Kink Chord:      %.2f m (change: %+.2f%%)\n', x_opt(3), (x_opt(3)-x0(3))/x0(3)*100);
-fprintf('  Tip Chord:       %.2f m (change: %+.2f%%)\n', x_opt(4), (x_opt(4)-x0(4))/x0(4)*100);
-fprintf('  Cruise Mach:     %.3f (change: %+.2f%%)\n', x_opt(5), (x_opt(5)-x0(5))/x0(5)*100);
-fprintf('  Cruise Altitude: %.0f m (change: %+.2f%%)\n', x_opt(6), (x_opt(6)-x0(6))/x0(6)*100);
+fprintf('  Wingspan:        %.4f m (change: %+.2f%%)\n', x_opt(1), (x_opt(1)-x0(1))/x0(1)*100);
+fprintf('  Root Chord:      %.4f m (change: %+.2f%%)\n', x_opt(2), (x_opt(2)-x0(2))/x0(2)*100);
+fprintf('  Kink Chord:      %.4f m (change: %+.2f%%)\n', x_opt(3), (x_opt(3)-x0(3))/x0(3)*100);
+fprintf('  Tip Chord:       %.4f m (change: %+.2f%%)\n', x_opt(4), (x_opt(4)-x0(4))/x0(4)*100);
+fprintf('  Cruise Mach:     %.5f (change: %+.2f%%)\n', x_opt(5), (x_opt(5)-x0(5))/x0(5)*100);
+fprintf('  Cruise Altitude: %.2f m (change: %+.2f%%)\n', x_opt(6), (x_opt(6)-x0(6))/x0(6)*100);
 fprintf('  Fuel Weight:     %.2f kg (change: %+.2f%%)\n', x_opt(7)/9.81, (x_opt(7)-x0(7))/x0(7)*100);
 fprintf('\nCST Parameters (Upper Surface):\n');
-fprintf('  [%.4f, %.4f, %.4f, %.4f, %.4f, %.4f]\n', x_opt(8:13));
+fprintf('  [%.5f, %.5f, %.5f, %.5f, %.5f, %.5f]\n', x_opt(8:13));
 fprintf('CST Parameters (Lower Surface):\n');
-fprintf('  [%.4f, %.4f, %.4f, %.4f, %.4f, %.4f]\n', x_opt(14:19));
+fprintf('  [%.5f, %.5f, %.5f, %.5f, %.5f, %.5f]\n', x_opt(14:19));
 fprintf('\nPerformance:\n');
 fprintf('  Initial Range: %.2f km\n', Range_initial / 1000);
 fprintf('  Optimal Range: %.2f km\n', -fval / 1000);
