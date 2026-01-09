@@ -11,7 +11,7 @@ emwetPath = fullfile(currentDir, 'EMWET');
 addpath(q3dPath);
 addpath(emwetPath);
 
-%%  SECTION 1: DEFINE DESIGN VECTOR INITIAL VALUES
+%%  SECTION 1: DEFINE DESIGN VECTOR INITIAL VALUES (in physical units)
 
 % Planform dimensions (in meters) - Source: Assignment specification
 b = 34.0;          % Total wingspan (m) [Drawing]
@@ -31,11 +31,10 @@ tank_limits = [0, 0.85]; % Fuel tank spanwise limits
 b_k = 4.36 + 3.95/2;          % Spanwise location of kink (m) [Estimated, drawing]
 W_fuel = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits);
 
-% Construct design vector for optimization (ONLY c_r, c_k, c_t, W_fuel)
-% x = [c_r, c_k, c_t, W_fuel]
+% Construct design vector for optimization (in physical units)
 x0 = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST];
 
-%%  SECTION 2: DEFINE BOUNDS FOR OPTIMIZATION
+%%  SECTION 2: DEFINE BOUNDS FOR OPTIMIZATION (in physical units)
 
 % Lower bounds for design variables
 b_lb = 28.0;       % Minimum wingspan (m)
@@ -84,27 +83,44 @@ fprintf('================================================\n\n');
 
 fprintf('========== STARTING OPTIMIZATION ==========\n');
 
-% Define objective function (negative range for maximization)
-objFun = @(x) -optimize(x);
+% <<< MODIFICATION: NORMALIZATION SETUP >>>
+% Create functions to map variables between physical space and normalized [-1, 1] space.
+% Denormalize: Maps a normalized vector x_norm from [-1, 1] to the physical range [lb, ub]
+denormalize = @(x_norm) lb + (ub - lb) .* (x_norm + 1) / 2;
+% Normalize: Maps a physical vector x_phys from [lb, ub] to the normalized range [-1, 1]
+normalize = @(x_phys) 2 * (x_phys - lb) ./ (ub - lb) - 1;
 
-% Optimization options - tuned for speed
+% <<< MODIFICATION: NORMALIZE INITIAL GUESS AND SET NORMALIZED BOUNDS >>>
+x0_norm = normalize(x0);
+lb_norm = -ones(size(x0));
+ub_norm = ones(size(x0));
+
+% <<< MODIFICATION: CREATE WRAPPER FUNCTIONS FOR OPTIMIZER >>>
+% These wrappers take a normalized vector, denormalize it, and then call your original functions.
+objFun_norm = @(x_norm) -optimize(denormalize(x_norm));
+constrFun_norm = @(x_norm) constraints(denormalize(x_norm));
+
+% Optimization options - Now that variables are scaled, these should be more effective.
 options = optimoptions('fmincon', ...
-    'Algorithm', 'interior-point', ...                      % Try 'sqp' to potentially reduce function evaluations
+    'Algorithm', 'sqp', ... % 'sqp' is often a good choice for scaled problems
     'Display', 'iter-detailed', ...
     'MaxIterations', 100, ...
     'MaxFunctionEvaluations', 1000, ...
-    'OptimalityTolerance', 1e-2, ...
-    'StepTolerance', 1e-4, ...
-    'ConstraintTolerance', 1e-2, ...
-    'FiniteDifferenceStepSize', 1e-6, ...  % Let MATLAB choose the step size, which can be better for scaled problems
-    'FiniteDifferenceType', 'central', ...
-    'PlotFcn', {@optimplotfval, @optimplotconstrviolation, @optimplotstepsize}, ... % Added step size plot
-    'UseParallel', true);                        % Use if you have the Parallel Computing Toolbox
+    'OptimalityTolerance', 1e-3, ... % Can be a bit tighter now
+    'StepTolerance', 1e-8, ...       % Tighter step tolerance
+    'ConstraintTolerance', 1e-6, ... % Much tighter constraint tolerance
+    'FiniteDifferenceStepSize', 1e-3, ... % A single small value is now effective
+    'FiniteDifferenceType', 'forward', ...
+    'PlotFcn', {@optimplotfval, @optimplotconstrviolation, @optimplotstepsize}, ...
+    'UseParallel', false);
 
-% Run optimization (unconstrained except for bounds)
+% <<< MODIFICATION: RUN OPTIMIZER WITH NORMALIZED VALUES >>>
 tic
-[x_opt, fval, exitflag, output] = fmincon(objFun, x0, [], [], [], [], lb, ub, @constraints, options);
+[x_opt_norm, fval, exitflag, output] = fmincon(objFun_norm, x0_norm, [], [], [], [], lb_norm, ub_norm, constrFun_norm, options);
 toc
+
+% <<< MODIFICATION: DENORMALIZE THE FINAL RESULT FOR ANALYSIS >>>
+x_opt = denormalize(x_opt_norm);
 
 %%  SECTION 5: DISPLAY OPTIMIZATION RESULTS
 
@@ -159,12 +175,12 @@ if isfield(output, 'iterations') && isfield(output, 'firstorderopt')
     % (fmincon does not store all iterates by default, so this is a custom plot for initial/final only)
     % Evaluate constraints at initial and optimal points
     c_hist = zeros(2,2);
-    c_hist(1,:) = constraints(x0);    % Initial
-    c_hist(2,:) = constraints(x_opt); % Final
+    [c_hist(1,:), ~] = constraints(x0);    % Initial
+    [c_hist(2,:), ~] = constraints(x_opt); % Final
     figure('Name','Constraint Values: Initial vs Optimal','NumberTitle','off');
     hold on; grid on;
-    plot([1 2], c_hist(:,1), 'o-', 'LineWidth', 2, 'MarkerSize', 8, 'DisplayName','Constraint 1');
-    plot([1 2], c_hist(:,2), 's-', 'LineWidth', 2, 'MarkerSize', 8, 'DisplayName','Constraint 2');
+    plot([1 2], c_hist(:,1), 'o-', 'LineWidth', 2, 'MarkerSize', 8, 'DisplayName','Constraint 1: Wing Loading');
+    plot([1 2], c_hist(:,2), 's-', 'LineWidth', 2, 'MarkerSize', 8, 'DisplayName','Constraint 2: Fuel Capacity');
     set(gca,'XTick',[1 2],'XTickLabel',{'Initial','Optimal'});
     ylabel('Constraint Value');
     title('Constraint Values at Initial and Optimal Points');
