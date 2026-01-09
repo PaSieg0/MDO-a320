@@ -64,7 +64,9 @@ C_T_ref = 1.8639e-4;    % Reference specific fuel consumption (1/s)
 
 % Weight breakdown (in Newtons)
 global W_wing
-W_wing = 6344*9.81;     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
+if isempty(W_wing)
+    W_wing = 6344*9.81;     % Wing weight (N) - initial guess (~5100 kg)
+end     % Wing weight (N) - initial guess (~5100 kg) [Typical for A320]
 % W_fuel is now a design variable extracted from x(7)
 
 %%  SECTION 4: START OF OPTIMIZER LOOP

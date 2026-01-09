@@ -11,6 +11,9 @@ emwetPath = fullfile(currentDir, 'EMWET');
 addpath(q3dPath);
 addpath(emwetPath);
 
+global W_wing; % <<< ADD THIS LINE
+W_wing = 6344*9.81; % Initialize the guess ONCE here.
+
 %%  SECTION 1: DEFINE DESIGN VECTOR INITIAL VALUES (in physical units)
 
 % Planform dimensions (in meters) - Source: Assignment specification
@@ -97,19 +100,19 @@ ub_norm = ones(size(x0));
 
 % <<< MODIFICATION: CREATE WRAPPER FUNCTIONS FOR OPTIMIZER >>>
 % These wrappers take a normalized vector, denormalize it, and then call your original functions.
-objFun_norm = @(x_norm) -optimize(denormalize(x_norm));
+objFun_norm = @(x_norm) - log(optimize(denormalize(x_norm)));
 constrFun_norm = @(x_norm) constraints(denormalize(x_norm));
 
 % Optimization options - Now that variables are scaled, these should be more effective.
 options = optimoptions('fmincon', ...
-    'Algorithm', 'sqp', ... % 'sqp' is often a good choice for scaled problems
+    'Algorithm', 'interior-point', ... % 'sqp' is often a good choice for scaled problems
     'Display', 'iter-detailed', ...
     'MaxIterations', 100, ...
     'MaxFunctionEvaluations', 1000, ...
     'OptimalityTolerance', 1e-3, ... % Can be a bit tighter now
-    'StepTolerance', 1e-8, ...       % Tighter step tolerance
+    'StepTolerance', 1e-4, ...       % Tighter step tolerance
     'ConstraintTolerance', 1e-6, ... % Much tighter constraint tolerance
-    'FiniteDifferenceStepSize', 1e-3, ... % A single small value is now effective
+    'FiniteDifferenceStepSize', 1e-4, ... % A single small value is now effective
     'FiniteDifferenceType', 'forward', ...
     'PlotFcn', {@optimplotfval, @optimplotconstrviolation, @optimplotstepsize}, ...
     'UseParallel', false);
@@ -168,23 +171,3 @@ for i = 1:length(ceq_final)
     end
 end
 fprintf('========================================\n');
-
-%%  SECTION 7: CUSTOM CONSTRAINT PLOT (two points per iteration, one per constraint)
-if isfield(output, 'iterations') && isfield(output, 'firstorderopt')
-    % If output structure contains iteration info, try to plot constraints
-    % (fmincon does not store all iterates by default, so this is a custom plot for initial/final only)
-    % Evaluate constraints at initial and optimal points
-    c_hist = zeros(2,2);
-    [c_hist(1,:), ~] = constraints(x0);    % Initial
-    [c_hist(2,:), ~] = constraints(x_opt); % Final
-    figure('Name','Constraint Values: Initial vs Optimal','NumberTitle','off');
-    hold on; grid on;
-    plot([1 2], c_hist(:,1), 'o-', 'LineWidth', 2, 'MarkerSize', 8, 'DisplayName','Constraint 1: Wing Loading');
-    plot([1 2], c_hist(:,2), 's-', 'LineWidth', 2, 'MarkerSize', 8, 'DisplayName','Constraint 2: Fuel Capacity');
-    set(gca,'XTick',[1 2],'XTickLabel',{'Initial','Optimal'});
-    ylabel('Constraint Value');
-    title('Constraint Values at Initial and Optimal Points');
-    legend('show');
-    yline(0,'--k','Constraint Boundary');
-    hold off;
-end
