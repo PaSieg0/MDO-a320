@@ -3,7 +3,6 @@ try
 % OPTIMIZE Wrapper function to run MDO analysis for given design variables
 % Includes caching to avoid redundant calculations during optimization
 
-
 % Extract design variables from input vector x
 % x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:12)]
 b = x(1);           % Total wingspan (m)
@@ -169,7 +168,7 @@ W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
     W_start_cr, W_end_cr, W_TO_max, ...
     V_cr_ref, h_cr_ref, C_T_ref);
 
-fprintf('R=%.0fkm\n', Range/1000);
+fprintf('R=%.2fkm\n', Range/1000);
 
 catch
     Range = 0;
