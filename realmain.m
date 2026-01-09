@@ -31,35 +31,27 @@ tank_limits = [0, 0.85]; % Fuel tank spanwise limits
 b_k = 4.36 + 3.95/2;          % Spanwise location of kink (m) [Estimated, drawing]
 W_fuel = performance(b, c_r, c_k, c_t, b_k, spar_locs, tank_limits);
 
-% Construct design vector for optimization
-% x = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST(1:12)]
-x0 = [b, c_r, c_k, c_t, M_cr, h_cr, W_fuel, CST];
+% Construct design vector for optimization (ONLY c_r, c_k, c_t, W_fuel)
+% x = [c_r, c_k, c_t, W_fuel]
+x0 = [c_r, c_k, c_t, W_fuel];
 
 %%  SECTION 2: DEFINE BOUNDS FOR OPTIMIZATION
 
 % Lower bounds for design variables
-b_lb = 28.0;        % Minimum wingspan (m)
-c_r_lb = 5.0;       % Minimum root chord (m)
-c_k_lb = 2.5;       % Minimum kink chord (m)
-c_t_lb = 1.0;       % Minimum tip chord (m)
-M_cr_lb = 0.9 * M_cr;     % Minimum cruise Mach
-h_cr_lb = 0.9 * h_cr;     % Minimum cruise altitude (m)
+c_r_lb = c_k;       % Minimum root chord (m)
+c_k_lb = c_t;       % Minimum kink chord (m)
+c_t_lb = 0.5;       % Minimum tip chord (m)
 W_fuel_lb = 0.5 * W_fuel;  % Minimum fuel weight (N) ~5000 kg
-CST_lb = [-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5];
 
-lb = [b_lb, c_r_lb, c_k_lb, c_t_lb, M_cr_lb, h_cr_lb, W_fuel_lb, CST_lb];
+lb = [c_r_lb, c_k_lb, c_t_lb, W_fuel_lb];
 
 % Upper bounds for design variables
-b_ub = 36.0;        % Maximum wingspan (m)
-c_r_ub = 9.0;       % Maximum root chord (m)
-c_k_ub = 5.0;       % Maximum kink chord (m)
-c_t_ub = 2.5;       % Maximum tip chord (m)
-M_cr_ub = 0.82;     % Maximum cruise Mach
-h_cr_ub = 1.1 * h_cr;    % Maximum cruise altitude (m)
+c_r_ub = 9.39;       % Maximum root chord (m)
+c_k_ub = c_r;       % Maximum kink chord (m)
+c_t_ub = c_k;       % Maximum tip chord (m)
 W_fuel_ub = 1.5 * W_fuel;  % Maximum fuel weight (N) ~25000 kg
-CST_ub = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
 
-ub = [b_ub, c_r_ub, c_k_ub, c_t_ub, M_cr_ub, h_cr_ub, W_fuel_ub, CST_ub];
+ub = [c_r_ub, c_k_ub, c_t_ub, W_fuel_ub];
 
 %%  SECTION 3: RUN INITIAL EVALUATION
 
@@ -69,13 +61,10 @@ fprintf('Running initial design point...\n');
 Range_initial = optimize(x0);
 
 fprintf('\nInitial Design Results:\n');
-fprintf('  Wingspan:        %.2f m\n', x0(1));
-fprintf('  Root Chord:      %.2f m\n', x0(2));
-fprintf('  Kink Chord:      %.2f m\n', x0(3));
-fprintf('  Tip Chord:       %.2f m\n', x0(4));
-fprintf('  Cruise Mach:     %.2f\n', x0(5));
-fprintf('  Cruise Altitude: %.0f m\n', x0(6));
-fprintf('  Fuel Weight:     %.2f kg\n', x0(7) / 9.81);
+fprintf('  Root Chord:      %.2f m\n', x0(1));
+fprintf('  Kink Chord:      %.2f m\n', x0(2));
+fprintf('  Tip Chord:       %.2f m\n', x0(3));
+fprintf('  Fuel Weight:     %.2f kg\n', x0(4) / 9.81);
 fprintf('  Range:           %.2f km\n', Range_initial / 1000);
 fprintf('================================================\n\n');
 
@@ -88,20 +77,22 @@ objFun = @(x) -optimize(x);
 
 % Optimization options - tuned for speed
 options = optimoptions('fmincon', ...
-    'Algorithm', 'interior-point', ...             % More robust for constraints
-    'Display', 'iter-detailed', ...                % Detailed output
-    'Diagnostics', 'on', ...                       % Show diagnostics
-    'MaxIterations', 100, ...                      % Increased from 30
-    'MaxFunctionEvaluations', 1000, ...            % Increased from 200
-    'OptimalityTolerance', 1e-2, ...               % Looser tolerance
-    'StepTolerance', 1e-3, ...                     % Looser tolerance
-    'ConstraintTolerance', 1e-2, ...               % Looser tolerance
-    'FiniteDifferenceStepSize', 1e-3, ...          % Larger step
-    'FiniteDifferenceType', 'forward', ...         % Forward is faster
-    'PlotFcn', {@optimplotfval, @optimplotconstrviolation}); % Plot objective and constraint violation
+    'Algorithm', 'interior-point', ...                      % Try 'sqp' to potentially reduce function evaluations
+    'Display', 'iter-detailed', ...
+    'MaxIterations', 100, ...
+    'MaxFunctionEvaluations', 1000, ...
+    'OptimalityTolerance', 1e-2, ...
+    'StepTolerance', 1e-4, ...
+    'ConstraintTolerance', 1e-2, ...
+    'FiniteDifferenceStepSize', 1e-6, ...  % Let MATLAB choose the step size, which can be better for scaled problems
+    'FiniteDifferenceType', 'forward', ...
+    'PlotFcn', {@optimplotfval, @optimplotconstrviolation, @optimplotstepsize}, ... % Added step size plot
+    'UseParallel', true);                        % Use if you have the Parallel Computing Toolbox
 
 % Run optimization (unconstrained except for bounds)
+tic
 [x_opt, fval, exitflag, output] = fmincon(objFun, x0, [], [], [], [], lb, ub, @constraints, options);
+toc
 
 %%  SECTION 5: DISPLAY OPTIMIZATION RESULTS
 
@@ -110,17 +101,10 @@ fprintf('Exit Flag: %d\n', exitflag);
 fprintf('Iterations: %d\n', output.iterations);
 fprintf('Function Evaluations: %d\n', output.funcCount);
 fprintf('\nOptimal Design Variables:\n');
-fprintf('  Wingspan:        %.2f m (change: %+.2f%%)\n', x_opt(1), (x_opt(1)-x0(1))/x0(1)*100);
-fprintf('  Root Chord:      %.2f m (change: %+.2f%%)\n', x_opt(2), (x_opt(2)-x0(2))/x0(2)*100);
-fprintf('  Kink Chord:      %.2f m (change: %+.2f%%)\n', x_opt(3), (x_opt(3)-x0(3))/x0(3)*100);
-fprintf('  Tip Chord:       %.2f m (change: %+.2f%%)\n', x_opt(4), (x_opt(4)-x0(4))/x0(4)*100);
-fprintf('  Cruise Mach:     %.3f (change: %+.2f%%)\n', x_opt(5), (x_opt(5)-x0(5))/x0(5)*100);
-fprintf('  Cruise Altitude: %.0f m (change: %+.2f%%)\n', x_opt(6), (x_opt(6)-x0(6))/x0(6)*100);
-fprintf('  Fuel Weight:     %.2f kg (change: %+.2f%%)\n', x_opt(7)/9.81, (x_opt(7)-x0(7))/x0(7)*100);
-fprintf('\nCST Parameters (Upper Surface):\n');
-fprintf('  [%.4f, %.4f, %.4f, %.4f, %.4f, %.4f]\n', x_opt(8:13));
-fprintf('CST Parameters (Lower Surface):\n');
-fprintf('  [%.4f, %.4f, %.4f, %.4f, %.4f, %.4f]\n', x_opt(14:19));
+fprintf('  Root Chord:      %.2f m (change: %+.2f%%)\n', x_opt(1), (x_opt(1)-x0(1))/x0(1)*100);
+fprintf('  Kink Chord:      %.2f m (change: %+.2f%%)\n', x_opt(2), (x_opt(2)-x0(2))/x0(2)*100);
+fprintf('  Tip Chord:       %.2f m (change: %+.2f%%)\n', x_opt(3), (x_opt(3)-x0(3))/x0(3)*100);
+fprintf('  Fuel Weight:     %.2f kg (change: %+.2f%%)\n', x_opt(4)/9.81, (x_opt(4)-x0(4))/x0(4)*100);
 fprintf('\nPerformance:\n');
 fprintf('  Initial Range: %.2f km\n', Range_initial / 1000);
 fprintf('  Optimal Range: %.2f km\n', -fval / 1000);
@@ -152,3 +136,23 @@ for i = 1:length(ceq_final)
     end
 end
 fprintf('========================================\n');
+
+%%  SECTION 7: CUSTOM CONSTRAINT PLOT (two points per iteration, one per constraint)
+if isfield(output, 'iterations') && isfield(output, 'firstorderopt')
+    % If output structure contains iteration info, try to plot constraints
+    % (fmincon does not store all iterates by default, so this is a custom plot for initial/final only)
+    % Evaluate constraints at initial and optimal points
+    c_hist = zeros(2,2);
+    c_hist(1,:) = constraints(x0);    % Initial
+    c_hist(2,:) = constraints(x_opt); % Final
+    figure('Name','Constraint Values: Initial vs Optimal','NumberTitle','off');
+    hold on; grid on;
+    plot([1 2], c_hist(:,1), 'o-', 'LineWidth', 2, 'MarkerSize', 8, 'DisplayName','Constraint 1');
+    plot([1 2], c_hist(:,2), 's-', 'LineWidth', 2, 'MarkerSize', 8, 'DisplayName','Constraint 2');
+    set(gca,'XTick',[1 2],'XTickLabel',{'Initial','Optimal'});
+    ylabel('Constraint Value');
+    title('Constraint Values at Initial and Optimal Points');
+    legend('show');
+    yline(0,'--k','Constraint Boundary');
+    hold off;
+end
