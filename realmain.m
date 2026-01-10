@@ -100,19 +100,19 @@ ub_norm = ones(size(x0));
 
 % <<< MODIFICATION: CREATE WRAPPER FUNCTIONS FOR OPTIMIZER >>>
 % These wrappers take a normalized vector, denormalize it, and then call your original functions.
-objFun_norm = @(x_norm) - log(optimize(denormalize(x_norm)));
+objFun_norm = @(x_norm) - optimize(denormalize(x_norm));
 constrFun_norm = @(x_norm) constraints(denormalize(x_norm));
 
 % Optimization options - Now that variables are scaled, these should be more effective.
 options = optimoptions('fmincon', ...
-    'Algorithm', 'interior-point', ... % 'sqp' is often a good choice for scaled problems
+    'Algorithm', 'sqp', ... % 'sqp' is often a good choice for scaled problems
     'Display', 'iter-detailed', ...
     'MaxIterations', 100, ...
     'MaxFunctionEvaluations', 1000, ...
     'OptimalityTolerance', 1e-3, ... % Can be a bit tighter now
     'StepTolerance', 1e-4, ...       % Tighter step tolerance
     'ConstraintTolerance', 1e-6, ... % Much tighter constraint tolerance
-    'FiniteDifferenceStepSize', 1e-4, ... % A single small value is now effective
+    'FiniteDifferenceStepSize', 1e-3, ... % A single small value is now effective
     'FiniteDifferenceType', 'forward', ...
     'PlotFcn', {@optimplotfval, @optimplotconstrviolation, @optimplotstepsize}, ...
     'UseParallel', false);

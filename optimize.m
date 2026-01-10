@@ -173,6 +173,6 @@ W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
 fprintf('R=%.2fkm\n', Range/1000);
 
 catch
-    Range = 0;
+    Range = NaN;
 end
 end
