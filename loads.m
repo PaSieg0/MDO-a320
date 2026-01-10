@@ -107,7 +107,8 @@ end
 
 %% Run the aerodynamic solver
 try
-    Res = Q3D_solver(AC);
+    % Use evalc to suppress command-line output from the solver
+    [~, Res] = evalc('Q3D_solver(AC)');
 catch ME
     cd(originalDir);
     rethrow(ME);
