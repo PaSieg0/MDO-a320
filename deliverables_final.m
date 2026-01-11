@@ -65,18 +65,18 @@ fprintf('=======================================================================
 fprintf('%-30s | %-15s | %-15s | %-10s\n', 'Variable', 'Initial', 'Optimized', 'Unit');
 fprintf('----------------------------------------------------------------------------------\n');
 fprintf('%-30s | %15.4f | %15.4f | km\n', 'Objective Function (Range)', Data_Init.Range/1000, Data_Opt.Range/1000);
-fprintf('%-30s | %15.4f | %15.4f | m\n', 'Wingspan (b)', Data_Init.b, Data_Opt.b);
-fprintf('%-30s | %15.4f | %15.4f | m\n', 'Root Chord (c_r)', Data_Init.c_r, Data_Opt.c_r);
-fprintf('%-30s | %15.4f | %15.4f | m\n', 'Kink Chord (c_k)', Data_Init.c_k, Data_Opt.c_k);
-fprintf('%-30s | %15.4f | %15.4f | m\n', 'Tip Chord (c_t)', Data_Init.c_t, Data_Opt.c_t);
-fprintf('%-30s | %15.4f | %15.4f | -', 'Cruise Mach (M_cr)', Data_Init.M_cr, Data_Opt.M_cr);
-fprintf('%-30s | %15.0f | %15.0f | m\n', 'Cruise Altitude (h_cr)', Data_Init.h_cr, Data_Opt.h_cr);
-fprintf('%-30s | %15.1f | %15.1f | kg', 'Fuel Weight (W_fuel)', Data_Init.W_fuel/9.81, Data_Opt.W_fuel/9.81);
-fprintf('%-30s | %15.1f | %15.1f | kg', 'MTOW', Data_Init.W_TO_max/9.81, Data_Opt.W_TO_max/9.81);
-fprintf('%-30s | %15.1f | %15.1f | kg', 'Wing Structural Weight', Data_Init.W_wing/9.81, Data_Opt.W_wing/9.81);
-fprintf('%-30s | %15.1f | %15.1f | kg', 'CO2 Emitted', Data_Init.W_CO2, Data_Opt.W_CO2);
-fprintf('%-30s | %15.2f | %15.2f | m^3', 'Fuel Volume (Required)', Data_Init.V_fuel_req, Data_Opt.V_fuel_req);
-fprintf('%-30s | %15.2f | %15.2f | m^3', 'Tank Capacity (Available)', Data_Init.V_tank_cap, Data_Opt.V_tank_cap);
+fprintf('\n%-30s | %15.4f | %15.4f | m\n', 'Wingspan (b)', Data_Init.b, Data_Opt.b);
+fprintf('\n%-30s | %15.4f | %15.4f | m\n', 'Root Chord (c_r)', Data_Init.c_r, Data_Opt.c_r);
+fprintf('\n%-30s | %15.4f | %15.4f | m\n', 'Kink Chord (c_k)', Data_Init.c_k, Data_Opt.c_k);
+fprintf('\n%-30s | %15.4f | %15.4f | m\n', 'Tip Chord (c_t)', Data_Init.c_t, Data_Opt.c_t);
+fprintf('\n%-30s | %15.4f | %15.4f | -', 'Cruise Mach (M_cr)', Data_Init.M_cr, Data_Opt.M_cr);
+fprintf('\n%-30s | %15.0f | %15.0f | m\n', 'Cruise Altitude (h_cr)', Data_Init.h_cr, Data_Opt.h_cr);
+fprintf('\n%-30s | %15.1f | %15.1f | kg', 'Fuel Weight (W_fuel)', Data_Init.W_fuel/9.81, Data_Opt.W_fuel/9.81);
+fprintf('\n%-30s | %15.1f | %15.1f | kg', 'MTOW', Data_Init.W_TO_max/9.81, Data_Opt.W_TO_max/9.81);
+fprintf('\n%-30s | %15.1f | %15.1f | kg', 'Wing Structural Weight', Data_Init.W_wing/9.81, Data_Opt.W_wing/9.81);
+fprintf('\n%-30s | %15.1f | %15.1f | kg', 'CO2 Emitted', Data_Init.W_CO2, Data_Opt.W_CO2);
+fprintf('\n%-30s | %15.2f | %15.2f | m^3', 'Fuel Volume (Required)', Data_Init.V_fuel_req, Data_Opt.V_fuel_req);
+fprintf('\n%-30s | %15.2f | %15.2f | m^3', 'Tank Capacity (Available)', Data_Init.V_tank_cap, Data_Opt.V_tank_cap);
 fprintf('----------------------------------------------------------------------------------\n');
 
 % --- Table 2: Aerodynamics & Performance ---
@@ -86,17 +86,17 @@ fprintf('=======================================================================
 fprintf('%-30s | %-15s | %-15s | %-10s\n', 'Metric', 'Initial', 'Optimized', 'Unit');
 fprintf('----------------------------------------------------------------------------------\n');
 fprintf('%-30s | %15.2f | %15.2f | m/s\n', 'True Airspeed (V)', Data_Init.V_cr, Data_Opt.V_cr);
-fprintf('%-30s | %15.2e | %15.2e | -', 'Reynolds Number (Re)', Data_Init.Re, Data_Opt.Re);
-fprintf('%-30s | %15.4f | %15.4f | -', 'Lift Coefficient (CL)', Data_Init.CL, Data_Opt.CL);
-fprintf('%-30s | %15.4f | %15.4f | deg', 'Angle of Attack (alpha)', Data_Init.alpha, Data_Opt.alpha);
-fprintf('%-30s | %15.5f | %15.5f | -', 'Wing Drag Coeff (CD_wing)', Data_Init.CD_wing, Data_Opt.CD_wing);
-fprintf('%-30s | %15.5f | %15.5f | -', 'Induced Drag Coeff (CD_i)', Data_Init.CD_ind, Data_Opt.CD_ind);
-fprintf('%-30s | %15.2f | %15.2f | -', 'L/D Ratio (Aircraft)', Data_Init.L_D, Data_Opt.L_D);
-fprintf('%-30s | %15.4e | %15.4e | 1/s', 'SFC (C_T)', Data_Init.Ct, Data_Opt.Ct);
-fprintf('%-30s | %15.4f | %15.4f | -', 'Prop. Efficiency (eta)', Data_Init.eta, Data_Opt.eta);
-fprintf('%-30s | %15.1f | %15.1f | N', 'Drag A-W (D_AW)', Data_Init.D_AW, Data_Opt.D_AW);
-fprintf('%-30s | %15.5f | %15.5f | -', 'Coeff Drag A-W (CD_AW)', Data_Init.CD_AW, Data_Opt.CD_AW);
-fprintf('%-30s | %15.1f | %15.1f | kg', 'Weight A-W (W_AW)', Data_Init.W_AW/9.81, Data_Opt.W_AW/9.81);
+fprintf('\n%-30s | %15.2e | %15.2e | -', 'Reynolds Number (Re)', Data_Init.Re, Data_Opt.Re);
+fprintf('\n%-30s | %15.4f | %15.4f | -', 'Lift Coefficient (CL)', Data_Init.CL, Data_Opt.CL);
+fprintf('\n%-30s | %15.4f | %15.4f | deg', 'Angle of Attack (alpha)', Data_Init.alpha, Data_Opt.alpha);
+fprintf('\n%-30s | %15.5f | %15.5f | -', 'Wing Drag Coeff (CD_wing)', Data_Init.CD_wing, Data_Opt.CD_wing);
+fprintf('\n%-30s | %15.5f | %15.5f | -', 'Induced Drag Coeff (CD_i)', Data_Init.CD_ind, Data_Opt.CD_ind);
+fprintf('\n%-30s | %15.2f | %15.2f | -', 'L/D Ratio (Aircraft)', Data_Init.L_D, Data_Opt.L_D);
+fprintf('\n%-30s | %15.4e | %15.4e | 1/s', 'SFC (C_T)', Data_Init.Ct, Data_Opt.Ct);
+fprintf('\n%-30s | %15.4f | %15.4f | -', 'Prop. Efficiency (eta)', Data_Init.eta, Data_Opt.eta);
+fprintf('\n%-30s | %15.1f | %15.1f | N', 'Drag A-W (D_AW)', Data_Init.D_AW, Data_Opt.D_AW);
+fprintf('\n%-30s | %15.5f | %15.5f | -', 'Coeff Drag A-W (CD_AW)', Data_Init.CD_AW, Data_Opt.CD_AW);
+fprintf('\n%-30s | %15.1f | %15.1f | kg', 'Weight A-W (W_AW)', Data_Init.W_AW/9.81, Data_Opt.W_AW/9.81);
 fprintf('----------------------------------------------------------------------------------\n');
 
 % --- Table 3: Geometry Stats ---
@@ -106,9 +106,9 @@ fprintf('=======================================================================
 fprintf('%-30s | %-15s | %-15s | %-10s\n', 'Parameter', 'Initial', 'Optimized', 'Unit');
 fprintf('----------------------------------------------------------------------------------\n');
 fprintf('%-30s | %15.2f | %15.2f | m^2\n', 'Wing Area (S)', Data_Init.S, Data_Opt.S);
-fprintf('%-30s | %15.2f | %15.2f | m\n', 'Mean Aero Chord (MAC)', Data_Init.MAC, Data_Opt.MAC);
-fprintf('%-30s | %15.2f | %15.2f | kg/m^2', 'Wing Loading (MTOW/S)', Data_Init.WS, Data_Opt.WS);
-fprintf('%-30s | %15.2f | %15.2f | -', 'Aspect Ratio (AR)', Data_Init.AR, Data_Opt.AR);
+fprintf('\n%-30s | %15.2f | %15.2f | m\n', 'Mean Aero Chord (MAC)', Data_Init.MAC, Data_Opt.MAC);
+fprintf('\n%-30s | %15.2f | %15.2f | kg/m^2', 'Wing Loading (MTOW/S)', Data_Init.WS, Data_Opt.WS);
+fprintf('\n%-30s | %15.2f | %15.2f | -', 'Aspect Ratio (AR)', Data_Init.AR, Data_Opt.AR);
 fprintf('----------------------------------------------------------------------------------\n');
 
 %% =========================================================================
