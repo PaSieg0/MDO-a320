@@ -10,15 +10,17 @@ x.add_system("struct", FUNC, (r"3:\text{Structures}"))
 x.add_system("aero", FUNC, (r"4:\text{Aerodynamics}"))
 x.add_system("perf", FUNC, (r"5:\text{Performance}"))
 x.add_system("ineq1", IFUNC, (r"7:\text{Inequality 1}", r"W/S \le (W/S)_{\text{max}}"))
-x.add_system("eq1", IFUNC, (r"7:\text{Equality 1}", r"W_\text{fuel} = min(W_\text{fuel, ref}, W_{\text{fuel, tank max}})"))
+x.add_system("ineq2", IFUNC, (r"7:\text{Inequality 2}", r"W_\text{fuel} \le W_{\text{fuel, tank max}}"))
+x.add_system("ineq3", IFUNC, (r"7:\text{Inequality 3}", r"W_\text{fuel} \le W_\text{fuel, ref}"))
 
 # Top Right
-x.connect("opt", "loads", (r"2:b, c_r, c_t, c_k", r"h_cr, W_\text{fuel}, CST"))
+x.connect("opt", "loads", (r"2:b, c_r, c_t, c_k", r"h_\text{cr}, W_\text{fuel}, CST"))
 x.connect("opt", "struct", (r"3:b, c_r, c_t, c_k", r"W_\text{fuel}, CST"))
 x.connect("opt", "aero", (r"4:h_\text{cr}, M_\text{cr}", r"b, c_r, c_t, c_k", r"W_\text{fuel}, CST"))
 x.connect("opt", "perf", r"5:h_\text{cr}, M_\text{cr}, W_\text{fuel}")
 x.connect("opt", "ineq1", r"7:b, c_r, c_t, c_k, W_\text{fuel}")
-x.connect("opt", "eq1", r"7:b, c_r, c_t, c_k, W_\text{fuel}, CST")
+x.connect("opt", "ineq2", r"7:b, c_r, c_t, c_k, W_\text{fuel}, CST")
+x.connect("opt", "ineq3", r"7:W_\text{fuel}")
 x.connect("mda", "loads", r"2:\hat{W}_\text{wing}")
 x.connect("mda", "struct", r"3:\hat{W}_\text{wing}")
 x.connect("loads", "struct", r"3:Y, L, M")
@@ -31,7 +33,8 @@ x.connect("aero", "perf", r"5:C_L, C_D")
 x.connect("struct", "mda", r"6:W_\text{wing}")
 x.connect("perf", "opt", r"7:R")
 x.connect("ineq1", "opt", r"7:g_\text{ineq1}")
-x.connect("eq1", "opt", r"7:g_\text{eq1}")
+x.connect("ineq2", "opt", r"7:g_\text{ineq2}")
+x.connect("ineq3", "opt", r"7:g_\text{ineq3}")
 
 # Inputs
 x.add_input("opt", r"x_0")
@@ -42,19 +45,20 @@ x.add_input("struct", (r"\Lambda_{\text{TE}_k}, b_k, \Gamma, \Theta_r, \tau_k, \
                        r"E_\text{al}, \sigma_{y_\text{tens}}, \sigma_{y_\text{comp}}, \rho_\text{al}", \
                        r"(x/c)^{F,R}_{\text{spar}}, \rho_f, m_\text{eng}, y_\text{eng}, W_\text{A-W}"))
 x.add_input("aero", r"\Lambda_{\text{TE}_k}, b_k, \Gamma, \Theta_r, \tau_k, \tau_t, W_\text{A-W}")
-x.add_input("perf", (r"\bar{C_T}, g, W_\text{A-W}", \
-                    r"f_\text{tank}, \rho_f, \Lambda_{\text{TE}_k}, b_k, g, (x/c)^{F,R}_{\text{spar}}", \
-                        r"V_{\text{cr}_\text{ref}} , M_{\text{cr}_\text{ref}}"))
+x.add_input("perf", (r"\bar{C_T}, W_\text{A-W}", \
+                    r"V_{\text{cr}_\text{ref}} , M_{\text{cr}_\text{ref}}"))
 x.add_input("ineq1", r"(W/S)_{\text{max}}, W_\text{A-W}, \Lambda_{\text{TE}_k}, b_k")
-x.add_input("eq1", (r"W_\text{fuel, ref}, b_k, (x/c)^{F,R}_{\text{spar}}", \
+x.add_input("ineq2", (r"b_k, (x/c)^{F,R}_{\text{spar}}", \
             r"(2y/b)_{\text{tank limits}}, \rho_f"))
+x.add_input("ineq3", r"W_\text{fuel, ref}")
 
 # Outputs
 x.add_output("opt", r"x^*", side=LEFT)
 x.add_output("struct", r"W_\text{wing}^*", side=LEFT)
 x.add_output("perf", r"R^*", side=LEFT)
 x.add_output("ineq1", r"g^*_\text{ineq1}", side=LEFT)
-x.add_output("eq1", r"g^*_\text{eq1}", side=LEFT)
+x.add_output("ineq2", r"g^*_\text{ineq2}", side=LEFT)
+x.add_output("ineq3", r"g^*_\text{ineq3}", side=LEFT)
 
 # Start of Corrected Code for Process Flow
 # Defines the process flow with parallel execution
@@ -64,7 +68,8 @@ x.add_process(["opt", "mda", "loads", "struct", "mda", "aero", "perf", "opt"])
 # 2. The main optimization process, showing parallel evaluation of functions
 # Path for the perfective function
 x.add_process(["mda", "ineq1", "opt"])
-x.add_process(["mda", "eq1", "opt"])
+x.add_process(["mda", "ineq2", "opt"])
+x.add_process(["mda", "ineq3", "opt"])
 # End of Corrected Code
 
 x.write("mdf")

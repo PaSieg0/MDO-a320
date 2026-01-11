@@ -15,10 +15,10 @@ W_fuel = x(7);      % Fuel weight (N)
 CST = x(8:19);      % CST airfoil parameters (12 values: 6 upper + 6 lower)
 CST = reshape(CST, 1, []); % Defensive: always row vector
 
-disp('Variables:');
-disp(['b = ', num2str(b), ', c_r = ', num2str(c_r), ', c_k = ', num2str(c_k), ', c_t = ', num2str(c_t), ...
-    ', M_cr = ', num2str(M_cr), ', h_cr = ', num2str(h_cr), ', W_fuel = ', num2str(W_fuel)]);
-disp(['CST = [', num2str(CST), ']']);
+% disp('Variables:');
+% disp(['b = ', num2str(b), ', c_r = ', num2str(c_r), ', c_k = ', num2str(c_k), ', c_t = ', num2str(c_t), ...
+%     ', M_cr = ', num2str(M_cr), ', h_cr = ', num2str(h_cr), ', W_fuel = ', num2str(W_fuel)]);
+% disp(['CST = [', num2str(CST), ']']);
 
 %%  SECTION 1: CONSTANT VALUES
 b_k = 4.36 + 3.95/2;          % Spanwise location of kink (m) [Estimated, drawing]
@@ -170,7 +170,7 @@ W_end_cr = (1 - W_fuel / W_TO_max) * W_start_cr / (0.938);
     W_start_cr, W_end_cr, W_TO_max, ...
     V_cr_ref, h_cr_ref, C_T_ref);
 
-fprintf('R=%.2fkm\n', Range/1000);
+% fprintf('R=%.2fkm\n', Range/1000);
 
 catch
     Range = NaN;

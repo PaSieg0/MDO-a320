@@ -24,37 +24,23 @@ W_wing = 6344*9.81; % Initialize global weight
 %% =========================================================================
 %% 1. DEFINE DESIGN VECTORS
 %% =========================================================================
+% Design vectors from optimization run.
 
-% --- INITIAL DESIGN (x0) ---
-b_init = 34.0;
-c_r_init = 7.0;
-c_k_init = 3.7;
-c_t_init = 1.6;
-M_cr_init = 0.78;
-h_cr_init = 11278.4;
-CST_init = [0.2337, 0.0796, 0.2683, 0.0887, 0.2789, 0.3811, -0.2254, -0.1634, -0.0470, -0.4771, 0.0735, 0.3255];
-spar_locs = [0.2, 0.6];
-tank_limits = [0, 0.85];
-b_k_static = 4.36 + 3.95/2; 
+% Iteration 0 (Initial Design)
+x_initial = [34, 7, 3.7, 1.6, 0.78, 11278.4, 157786, 0.2337, 0.0796, 0.2683, 0.0887, 0.2789, 0.3811, -0.2254, -0.1634, -0.047, -0.4771, 0.0735, 0.3255];
 
-% Calculate initial fuel guess
-W_fuel_init = performance(b_init, c_r_init, c_k_init, c_t_init, b_k_static, spar_locs, tank_limits);
+% Iteration 9 (Final Optimal Design)
+x_optimal = [33.4775, 6.98265, 4.21178, 1.4602, 0.77471, 11458.1, 157788, 0.173046, 0.131023, 0.224855, 0.099523, 0.329797, 0.260755, -0.221634, -0.168046, -0.105495, -0.326521, 0.12339, 0.31738];
 
-x_initial = [b_init, c_r_init, c_k_init, c_t_init, M_cr_init, h_cr_init, W_fuel_init, CST_init];
-
-% --- USER OPTIMIZED DESIGN (x_opt) ---
-b_optim = 33.48;
-c_r_optim = 6.98;
-c_k_optim = 4.21;
-c_t_optim = 1.46;
-M_cr_optim = 0.775;
-h_cr_optim = 11458;
-CST_optim = [0.1730, 0.1310, 0.2249, 0.0995, 0.3298, 0.2608, -0.2216, -0.1680, -0.1055, -0.3265, 0.1234, 0.3174];
-
-% Calculate fuel for optimized design
-W_fuel_optim = performance(b_optim, c_r_optim, c_k_optim, c_t_optim, b_k_static, spar_locs, tank_limits);
-
-x_optimal = [b_optim, c_r_optim, c_k_optim, c_t_optim, M_cr_optim, h_cr_optim, W_fuel_optim, CST_optim];
+% --- Intermediate designs (included for record-keeping, but not used in analysis) ---
+x1 = [33.5059, 6.79401, 3.97177, 1.50941, 0.773576, 11371.3, 157786, 0.173277, 0.114222, 0.287381, 0.122572, 0.297108, 0.308538, -0.248014, -0.108766, -0.0843065, -0.396632, 0.108624, 0.33987];
+x2 = [33.4797, 6.80634, 3.98615, 1.50462, 0.773237, 11376.2, 157786, 0.17071, 0.116053, 0.288391, 0.124364, 0.298071, 0.309447, -0.249211, -0.10617, -0.0815325, -0.392375, 0.110482, 0.340631];
+x3 = [33.5814, 6.9106, 4.10777, 1.59321, 0.775124, 11326.7, 157787, 0.183998, 0.131547, 0.26239, 0.0991688, 0.30622, 0.276783, -0.218977, -0.122063, -0.062799, -0.356364, 0.085847, 0.306708];
+x4 = [33.3562, 7.01065, 4.12296, 1.54909, 0.772173, 11370.3, 157787, 0.19675, 0.129244, 0.231625, 0.0749902, 0.31404, 0.28579, -0.230318, -0.137314, -0.0804416, -0.357642, 0.10256, 0.314508];
+x5 = [33.2821, 7.04358, 4.12785, 1.53457, 0.771202, 11384.6, 157787, 0.189709, 0.134376, 0.235339, 0.0685033, 0.316614, 0.274914, -0.23405, -0.142334, -0.0749384, -0.345771, 0.0942194, 0.303234];
+x6 = [33.3588, 7.10987, 4.09917, 1.50535, 0.77258, 11413.5, 157787, 0.192778, 0.138913, 0.216688, 0.0806921, 0.321794, 0.253024, -0.213315, -0.152437, -0.0869453, -0.350128, 0.105682, 0.308792];
+x7 = [33.3714, 7.12069, 4.09454, 1.50058, 0.772805, 11418.2, 157787, 0.193242, 0.139737, 0.213285, 0.0826827, 0.32264, 0.250695, -0.209929, -0.154087, -0.0889063, -0.35084, 0.107554, 0.3097];
+x8 = [33.4775, 6.98265, 4.21178, 1.4602, 0.77471, 11458.1, 157788, 0.173046, 0.131023, 0.224855, 0.099523, 0.329797, 0.260755, -0.221634, -0.168046, -0.105495, -0.326521, 0.12339, 0.31738];
 
 %% =========================================================================
 %% 2. RUN ANALYSIS
@@ -69,79 +55,58 @@ Data_Opt = analyze_design_full(x_optimal, 'Optimized');
 %% 3. GENERATE TABLES (Strict Assignment Order)
 %% =========================================================================
 
-% --- TABLE 1: OPTIMIZATION VARIABLES, CONSTRAINTS & WEIGHTS ---
-fprintf('\n\n=======================================================================================\n');
-fprintf('TABLE 1: OPTIMIZATION RESULTS (Variables, Constraints, Weights)\n');
-fprintf('=======================================================================================\n');
-fprintf('%-35s | %-15s | %-15s | %-8s\n', 'Metric', 'Initial', 'Optimized', 'Unit');
-fprintf('---------------------------------------------------------------------------------------\n');
-% Objective
-fprintf('%-35s | %15.4f | %15.4f | km\n', 'Objective Function (Range)', Data_Init.Range/1000, Data_Opt.Range/1000);
-fprintf('---------------------------------------------------------------------------------------\n');
-% Design Variables
-fprintf('%-35s | %15.4f | %15.4f | m\n', 'Wingspan (b)', Data_Init.b, Data_Opt.b);
-fprintf('%-35s | %15.4f | %15.4f | m\n', 'Root Chord (c_r)', Data_Init.c_r, Data_Opt.c_r);
-fprintf('%-35s | %15.4f | %15.4f | m\n', 'Kink Chord (c_k)', Data_Init.c_k, Data_Opt.c_k);
-fprintf('%-35s | %15.4f | %15.4f | m\n', 'Tip Chord (c_t)', Data_Init.c_t, Data_Opt.c_t);
-fprintf('%-35s | %15.4f | %15.4f | -', 'Cruise Mach (M_cr)', Data_Init.M_cr, Data_Opt.M_cr);
-fprintf('%-35s | %15.0f | %15.0f | m\n', 'Cruise Altitude (h_cr)', Data_Init.h_cr, Data_Opt.h_cr);
-fprintf('%-35s | %15.1f | %15.1f | kg\n', 'Fuel Weight (W_fuel)', Data_Init.W_fuel/9.81, Data_Opt.W_fuel/9.81);
-fprintf('---------------------------------------------------------------------------------------\n');
-% Constraints
-fprintf('%-35s | %15.4f | %15.4f | -\n', 'Constr: Wing Loading (c<=0)', Data_Init.Constr_WL, Data_Opt.Constr_WL);
-fprintf('%-35s | %15.4f | %15.4f | -\n', 'Constr: Tank Volume (c<=0)', Data_Init.Constr_Vol, Data_Opt.Constr_Vol);
-fprintf('---------------------------------------------------------------------------------------\n');
-% Weights & CO2
-fprintf('%-35s | %15.1f | %15.1f | kg\n', 'MTOW (W_TO_max)', Data_Init.W_TO_max/9.81, Data_Opt.W_TO_max/9.81);
-fprintf('%-35s | %15.1f | %15.1f | kg\n', 'Wing Structure (W_str_wing)', Data_Init.W_wing/9.81, Data_Opt.W_wing/9.81);
-fprintf('%-35s | %15.1f | %15.1f | kg\n', 'CO2 Emitted (W_CO2)', Data_Init.W_CO2, Data_Opt.W_CO2);
-fprintf('%-35s | %15.1f | %15.1f | kg\n', 'Weight A-W-Fuel (W_AW)', Data_Init.W_AW/9.81, Data_Opt.W_AW/9.81);
-fprintf('---------------------------------------------------------------------------------------\n');
-% Volumes
-fprintf('%-35s | %15.2f | %15.2f | m^3\n', 'Fuel Volume (V_fuel)', Data_Init.V_fuel_req, Data_Opt.V_fuel_req);
-fprintf('%-35s | %15.2f | %15.2f | m^3\n', 'Tank Capacity (V_tank)', Data_Init.V_tank_cap, Data_Opt.V_tank_cap);
-fprintf('---------------------------------------------------------------------------------------\n');
+% --- Table 1: Settings & Results ---
+fprintf('\n\n==================================================================================\n');
+fprintf('TABLE 1: DESIGN VARIABLES & OBJECTIVE RESULTS\n');
+fprintf('==================================================================================\n');
+fprintf('%-30s | %-15s | %-15s | %-10s\n', 'Variable', 'Initial', 'Optimized', 'Unit');
+fprintf('----------------------------------------------------------------------------------\n');
+fprintf('%-30s | %15.4f | %15.4f | km\n', 'Objective Function (Range)', Data_Init.Range/1000, Data_Opt.Range/1000);
+fprintf('\n%-30s | %15.4f | %15.4f | m\n', 'Wingspan (b)', Data_Init.b, Data_Opt.b);
+fprintf('\n%-30s | %15.4f | %15.4f | m\n', 'Root Chord (c_r)', Data_Init.c_r, Data_Opt.c_r);
+fprintf('\n%-30s | %15.4f | %15.4f | m\n', 'Kink Chord (c_k)', Data_Init.c_k, Data_Opt.c_k);
+fprintf('\n%-30s | %15.4f | %15.4f | m\n', 'Tip Chord (c_t)', Data_Init.c_t, Data_Opt.c_t);
+fprintf('\n%-30s | %15.4f | %15.4f | -', 'Cruise Mach (M_cr)', Data_Init.M_cr, Data_Opt.M_cr);
+fprintf('\n%-30s | %15.0f | %15.0f | m\n', 'Cruise Altitude (h_cr)', Data_Init.h_cr, Data_Opt.h_cr);
+fprintf('\n%-30s | %15.1f | %15.1f | kg', 'Fuel Weight (W_fuel)', Data_Init.W_fuel/9.81, Data_Opt.W_fuel/9.81);
+fprintf('\n%-30s | %15.1f | %15.1f | kg', 'MTOW', Data_Init.W_TO_max/9.81, Data_Opt.W_TO_max/9.81);
+fprintf('\n%-30s | %15.1f | %15.1f | kg', 'Wing Structural Weight', Data_Init.W_wing/9.81, Data_Opt.W_wing/9.81);
+fprintf('\n%-30s | %15.1f | %15.1f | kg', 'CO2 Emitted', Data_Init.W_CO2, Data_Opt.W_CO2);
+fprintf('\n%-30s | %15.2f | %15.2f | m^3', 'Fuel Volume (Required)', Data_Init.V_fuel_req, Data_Opt.V_fuel_req);
+fprintf('\n%-30s | %15.2f | %15.2f | m^3', 'Tank Capacity (Available)', Data_Init.V_tank_cap, Data_Opt.V_tank_cap);
+fprintf('----------------------------------------------------------------------------------\n');
 
-% --- TABLE 2: PHYSICS @ DESIGN POINT ---
-fprintf('\n\n=======================================================================================\n');
-fprintf('TABLE 2: PHYSICS & AERODYNAMICS (@ DESIGN POINT)\n');
-fprintf('=======================================================================================\n');
-fprintf('%-35s | %-15s | %-15s | %-8s\n', 'Metric', 'Initial', 'Optimized', 'Unit');
-fprintf('---------------------------------------------------------------------------------------\n');
-fprintf('%-35s | %15.2f | %15.2f | m/s\n', 'Velocity (V)', Data_Init.V_cr, Data_Opt.V_cr);
-fprintf('%-35s | %15.0f | %15.0f | m\n', 'Altitude (h)', Data_Init.h_cr, Data_Opt.h_cr);
-fprintf('%-35s | %15.4f | %15.4f | -', 'Mach Number', Data_Init.M_cr, Data_Opt.M_cr);
-fprintf('\n%-35s | %15.1f | %15.1f | Pa\n', 'Dynamic Pressure (q)', Data_Init.q_cr, Data_Opt.q_cr);
-fprintf('%-35s | %15.2e | %15.2e | -', 'Reynolds Number (Re)', Data_Init.Re, Data_Opt.Re);
-fprintf('\n---------------------------------------------------------------------------------------\n');
-fprintf('%-35s | %15.4e | %15.4e | 1/s\n', 'SFC (C_T)', Data_Init.Ct, Data_Opt.Ct);
-fprintf('%-35s | %15.4f | %15.4f | -\n', 'Prop. Efficiency (eta)', Data_Init.eta, Data_Opt.eta);
-fprintf('---------------------------------------------------------------------------------------\n');
-fprintf('%-35s | %15.4f | %15.4f | -\n', 'Lift Coeff (C_L)', Data_Init.CL, Data_Opt.CL);
-fprintf('%-35s | %15.4f | %15.4f | deg\n', 'Angle of Attack (alpha)', Data_Init.alpha, Data_Opt.alpha);
-fprintf('%-35s | %15.5f | %15.5f | -\n', 'Wing Drag Coeff (C_D,wing)', Data_Init.CD_wing, Data_Opt.CD_wing);
-fprintf('%-35s | %15.5f | %15.5f | -\n', 'Induced Drag Coeff (C_Di,wing)', Data_Init.CD_ind, Data_Opt.CD_ind);
-fprintf('%-35s | %15.2f | %15.2f | -\n', 'Efficiency (C_L/C_D)', Data_Init.L_D, Data_Opt.L_D);
-fprintf('---------------------------------------------------------------------------------------\n');
-fprintf('%-35s | %15.1f | %15.1f | N\n', 'Drag A-W Force (D_AW)', Data_Init.D_AW, Data_Opt.D_AW);
-fprintf('%-35s | %15.5f | %15.5f | -\n', 'Drag A-W Coeff (C_D,AW)', Data_Init.CD_AW, Data_Opt.CD_AW);
-fprintf('---------------------------------------------------------------------------------------\n');
+% --- Table 2: Aerodynamics & Performance ---
+fprintf('\n\n==================================================================================\n');
+fprintf('TABLE 2: AERODYNAMICS & PERFORMANCE (@ Design Point)\n');
+fprintf('==================================================================================\n');
+fprintf('%-30s | %-15s | %-15s | %-10s\n', 'Metric', 'Initial', 'Optimized', 'Unit');
+fprintf('----------------------------------------------------------------------------------\n');
+fprintf('%-30s | %15.2f | %15.2f | m/s\n', 'True Airspeed (V)', Data_Init.V_cr, Data_Opt.V_cr);
+fprintf('\n%-30s | %15.2e | %15.2e | -', 'Reynolds Number (Re)', Data_Init.Re, Data_Opt.Re);
+fprintf('\n%-30s | %15.4f | %15.4f | -', 'Lift Coefficient (CL)', Data_Init.CL, Data_Opt.CL);
+fprintf('\n%-30s | %15.4f | %15.4f | deg', 'Angle of Attack (alpha)', Data_Init.alpha, Data_Opt.alpha);
+fprintf('\n%-30s | %15.5f | %15.5f | -', 'Wing Drag Coeff (CD_wing)', Data_Init.CD_wing, Data_Opt.CD_wing);
+fprintf('\n%-30s | %15.5f | %15.5f | -', 'Induced Drag Coeff (CD_i)', Data_Init.CD_ind, Data_Opt.CD_ind);
+fprintf('\n%-30s | %15.2f | %15.2f | -', 'L/D Ratio (Aircraft)', Data_Init.L_D, Data_Opt.L_D);
+fprintf('\n%-30s | %15.4e | %15.4e | 1/s', 'SFC (C_T)', Data_Init.Ct, Data_Opt.Ct);
+fprintf('\n%-30s | %15.4f | %15.4f | -', 'Prop. Efficiency (eta)', Data_Init.eta, Data_Opt.eta);
+fprintf('\n%-30s | %15.1f | %15.1f | N', 'Drag A-W (D_AW)', Data_Init.D_AW, Data_Opt.D_AW);
+fprintf('\n%-30s | %15.5f | %15.5f | -', 'Coeff Drag A-W (CD_AW)', Data_Init.CD_AW, Data_Opt.CD_AW);
+fprintf('\n%-30s | %15.1f | %15.1f | kg', 'Weight A-W (W_AW)', Data_Init.W_AW/9.81, Data_Opt.W_AW/9.81);
+fprintf('----------------------------------------------------------------------------------\n');
 
-% --- TABLE 3: GEOMETRY ---
-fprintf('\n\n=======================================================================================\n');
-fprintf('TABLE 3: GEOMETRY DETAILS\n');
-fprintf('=======================================================================================\n');
-fprintf('%-35s | %-15s | %-15s | %-8s\n', 'Metric', 'Initial', 'Optimized', 'Unit');
-fprintf('---------------------------------------------------------------------------------------\n');
-fprintf('%-35s | %15.2f | %15.2f | m^2\n', 'Wing Area (S)', Data_Init.S, Data_Opt.S);
-fprintf('%-35s | %15.2f | %15.2f | m\n', 'MAC', Data_Init.MAC, Data_Opt.MAC);
-fprintf('%-35s | %15.1f | %15.1f | kg/m^2\n', 'Wing Loading (W_TO_max/S)', Data_Init.WS, Data_Opt.WS);
-fprintf('%-35s | %15.2f | %15.2f | -\n', 'Aspect Ratio (AR)', Data_Init.AR, Data_Opt.AR);
-fprintf('---------------------------------------------------------------------------------------\n');
-fprintf('%-35s | %15.2f | %15.2f | deg\n', 'LE Sweep Angle', Data_Init.Sweep_LE, Data_Opt.Sweep_LE);
-fprintf('%-35s | %15.2f | %15.2f | m\n', 'Inboard Span (b_in)', Data_Init.b_in, Data_Opt.b_in);
-fprintf('%-35s | %15.2f | %15.2f | m\n', 'Outboard Span (b_out)', Data_Init.b_out, Data_Opt.b_out);
-fprintf('---------------------------------------------------------------------------------------\n');
+% --- Table 3: Geometry Stats ---
+fprintf('\n\n==================================================================================\n');
+fprintf('TABLE 3: GEOMETRY STATISTICS\n');
+fprintf('==================================================================================\n');
+fprintf('%-30s | %-15s | %-15s | %-10s\n', 'Parameter', 'Initial', 'Optimized', 'Unit');
+fprintf('----------------------------------------------------------------------------------\n');
+fprintf('%-30s | %15.2f | %15.2f | m^2\n', 'Wing Area (S)', Data_Init.S, Data_Opt.S);
+fprintf('\n%-30s | %15.2f | %15.2f | m\n', 'Mean Aero Chord (MAC)', Data_Init.MAC, Data_Opt.MAC);
+fprintf('\n%-30s | %15.2f | %15.2f | kg/m^2', 'Wing Loading (MTOW/S)', Data_Init.WS, Data_Opt.WS);
+fprintf('\n%-30s | %15.2f | %15.2f | -', 'Aspect Ratio (AR)', Data_Init.AR, Data_Opt.AR);
+fprintf('----------------------------------------------------------------------------------\n');
 
 %% =========================================================================
 %% 4. GENERATE PLOTS (Single Interface - 2x3 Grid)

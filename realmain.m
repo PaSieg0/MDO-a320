@@ -107,8 +107,8 @@ constrFun_norm = @(x_norm) constraints(denormalize(x_norm));
 % functions, so all required data can be saved at each iteration.
 outputFun = @(x,ov,st) saveState(x,ov,st,denormalize,@constraints);
 
-% Optimization options - Plotting is disabled to avoid errors.
-% All data is saved via the OutputFcn for later analysis.
+% Optimization options - Using built-in plotting functions for stability.
+% All detailed data is saved via the OutputFcn for later analysis.
 options = optimoptions('fmincon', ...
     'Algorithm', 'sqp', ... % 'sqp' is often a good choice for scaled problems
     'Display', 'iter-detailed', ...
@@ -119,6 +119,7 @@ options = optimoptions('fmincon', ...
     'ConstraintTolerance', 1e-6, ... % Much tighter constraint tolerance
     'FiniteDifferenceStepSize', 1e-3, ... % A single small value is now effective
     'FiniteDifferenceType', 'forward', ...
+    'PlotFcn', {@optimplotfval, @optimplotconstrviolation, @optimplotstepsize}, ...
     'OutputFcn', outputFun, ... % Save history at each iteration
     'UseParallel', false);
 

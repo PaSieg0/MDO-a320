@@ -24,20 +24,22 @@
 \node [DataIO] (output_loads) {$\begin{array}{c}\Lambda_{\text{TE}_k}, b_k, \Gamma, \Theta_r, \tau_k, \tau_t \\ n_\text{max}, V_{\text{MO}_{\text{ref}}}, W_\text{A-W}\end{array}$};&
 \node [DataIO] (output_struct) {$\begin{array}{c}\Lambda_{\text{TE}_k}, b_k, \Gamma, \Theta_r, \tau_k, \tau_t \\ E_\text{al}, \sigma_{y_\text{tens}}, \sigma_{y_\text{comp}}, \rho_\text{al} \\ (x/c)^{F,R}_{\text{spar}}, \rho_f, m_\text{eng}, y_\text{eng}, W_\text{A-W}\end{array}$};&
 \node [DataIO] (output_aero) {$\Lambda_{\text{TE}_k}, b_k, \Gamma, \Theta_r, \tau_k, \tau_t, W_\text{A-W}$};&
-\node [DataIO] (output_perf) {$\begin{array}{c}\bar{C_T}, g, W_\text{A-W} \\ f_\text{tank}, \rho_f, \Lambda_{\text{TE}_k}, b_k, g, (x/c)^{F,R}_{\text{spar}} \\ V_{\text{cr}_\text{ref}} , M_{\text{cr}_\text{ref}}\end{array}$};&
+\node [DataIO] (output_perf) {$\begin{array}{c}\bar{C_T}, W_\text{A-W} \\ V_{\text{cr}_\text{ref}} , M_{\text{cr}_\text{ref}}\end{array}$};&
 \node [DataIO] (output_ineq1) {$(W/S)_{\text{max}}, W_\text{A-W}, \Lambda_{\text{TE}_k}, b_k$};&
-\node [DataIO] (output_eq1) {$\begin{array}{c}W_\text{fuel, ref}, b_k, (x/c)^{F,R}_{\text{spar}} \\ (2y/b)_{\text{tank limits}}, \rho_f\end{array}$};&
+\node [DataIO] (output_ineq2) {$\begin{array}{c}b_k, (x/c)^{F,R}_{\text{spar}} \\ (2y/b)_{\text{tank limits}}, \rho_f\end{array}$};&
+\node [DataIO] (output_ineq3) {$W_\text{fuel, ref}$};&
 \\
 %Row 1
 \node [DataIO] (left_output_opt) {$x^*$};&
 \node [Optimization] (opt) {$\begin{array}{c}0,7\rightarrow1 \\ \text{Optimizer}\end{array}$};&
 &
-\node [DataInter] (opt-loads) {$\begin{array}{c}2:b, c_r, c_t, c_k \\ h_cr, W_\text{fuel}, CST\end{array}$};&
+\node [DataInter] (opt-loads) {$\begin{array}{c}2:b, c_r, c_t, c_k \\ h_\text{cr}, W_\text{fuel}, CST\end{array}$};&
 \node [DataInter] (opt-struct) {$\begin{array}{c}3:b, c_r, c_t, c_k \\ W_\text{fuel}, CST\end{array}$};&
 \node [DataInter] (opt-aero) {$\begin{array}{c}4:h_\text{cr}, M_\text{cr} \\ b, c_r, c_t, c_k \\ W_\text{fuel}, CST\end{array}$};&
 \node [DataInter] (opt-perf) {$5:h_\text{cr}, M_\text{cr}, W_\text{fuel}$};&
 \node [DataInter] (opt-ineq1) {$7:b, c_r, c_t, c_k, W_\text{fuel}$};&
-\node [DataInter] (opt-eq1) {$7:b, c_r, c_t, c_k, W_\text{fuel}, CST$};&
+\node [DataInter] (opt-ineq2) {$7:b, c_r, c_t, c_k, W_\text{fuel}, CST$};&
+\node [DataInter] (opt-ineq3) {$7:W_\text{fuel}$};&
 \\
 %Row 2
 &
@@ -45,6 +47,7 @@
 \node [MDA] (mda) {$\begin{array}{c}1,6\rightarrow2 \\ \text{MDA Coordinator}\end{array}$};&
 \node [DataInter] (mda-loads) {$2:\hat{W}_\text{wing}$};&
 \node [DataInter] (mda-struct) {$3:\hat{W}_\text{wing}$};&
+&
 &
 &
 &
@@ -60,6 +63,7 @@
 &
 &
 &
+&
 \\
 %Row 4
 \node [DataIO] (left_output_struct) {$W_\text{wing}^*$};&
@@ -71,6 +75,7 @@
 \node [DataInter] (struct-perf) {$5:W_\text{wing}$};&
 \node [DataInter] (struct-ineq1) {$7:W_\text{wing}$};&
 &
+&
 \\
 %Row 5
 &
@@ -80,6 +85,7 @@
 &
 \node [Function] (aero) {$4:\text{Aerodynamics}$};&
 \node [DataInter] (aero-perf) {$5:C_L, C_D$};&
+&
 &
 &
 \\
@@ -93,6 +99,7 @@
 \node [Function] (perf) {$5:\text{Performance}$};&
 &
 &
+&
 \\
 %Row 7
 \node [DataIO] (left_output_ineq1) {$g^*_\text{ineq1}$};&
@@ -104,19 +111,34 @@
 &
 \node [ImplicitFunction] (ineq1) {$\begin{array}{c}7:\text{Inequality 1} \\ W/S \le (W/S)_{\text{max}}\end{array}$};&
 &
+&
 \\
 %Row 8
-\node [DataIO] (left_output_eq1) {$g^*_\text{eq1}$};&
-\node [DataInter] (eq1-opt) {$7:g_\text{eq1}$};&
+\node [DataIO] (left_output_ineq2) {$g^*_\text{ineq2}$};&
+\node [DataInter] (ineq2-opt) {$7:g_\text{ineq2}$};&
 &
 &
 &
 &
 &
 &
-\node [ImplicitFunction] (eq1) {$\begin{array}{c}7:\text{Equality 1} \\ W_\text{fuel} = min(W_\text{fuel, ref}, W_{\text{fuel, tank max}})\end{array}$};&
+\node [ImplicitFunction] (ineq2) {$\begin{array}{c}7:\text{Inequality 2} \\ W_\text{fuel} \le W_{\text{fuel, tank max}}\end{array}$};&
+&
 \\
 %Row 9
+\node [DataIO] (left_output_ineq3) {$g^*_\text{ineq3}$};&
+\node [DataInter] (ineq3-opt) {$7:g_\text{ineq3}$};&
+&
+&
+&
+&
+&
+&
+&
+\node [ImplicitFunction] (ineq3) {$\begin{array}{c}7:\text{Inequality 3} \\ W_\text{fuel} \le W_\text{fuel, ref}\end{array}$};&
+\\
+%Row 10
+&
 &
 &
 &
@@ -150,7 +172,13 @@
 }{ [start chain=process]
  \begin{pgfonlayer}{process} 
 \chainin (mda);
-\chainin (eq1) [join=by ProcessHVA];
+\chainin (ineq2) [join=by ProcessHVA];
+\chainin (opt) [join=by ProcessHVA];
+\end{pgfonlayer}
+}{ [start chain=process]
+ \begin{pgfonlayer}{process} 
+\chainin (mda);
+\chainin (ineq3) [join=by ProcessHVA];
 \chainin (opt) [join=by ProcessHVA];
 \end{pgfonlayer}
 }
@@ -163,7 +191,8 @@
 (opt) edge [DataLine] (opt-aero)
 (opt) edge [DataLine] (opt-perf)
 (opt) edge [DataLine] (opt-ineq1)
-(opt) edge [DataLine] (opt-eq1)
+(opt) edge [DataLine] (opt-ineq2)
+(opt) edge [DataLine] (opt-ineq3)
 (mda) edge [DataLine] (mda-loads)
 (mda) edge [DataLine] (mda-struct)
 (loads) edge [DataLine] (loads-struct)
@@ -174,19 +203,22 @@
 (struct) edge [DataLine] (struct-mda)
 (perf) edge [DataLine] (perf-opt)
 (ineq1) edge [DataLine] (ineq1-opt)
-(eq1) edge [DataLine] (eq1-opt)
+(ineq2) edge [DataLine] (ineq2-opt)
+(ineq3) edge [DataLine] (ineq3-opt)
 (opt) edge [DataLine] (left_output_opt)
 (struct) edge [DataLine] (left_output_struct)
 (perf) edge [DataLine] (left_output_perf)
 (ineq1) edge [DataLine] (left_output_ineq1)
-(eq1) edge [DataLine] (left_output_eq1)
+(ineq2) edge [DataLine] (left_output_ineq2)
+(ineq3) edge [DataLine] (left_output_ineq3)
 % Vertical edges
 (opt-loads) edge [DataLine] (loads)
 (opt-struct) edge [DataLine] (struct)
 (opt-aero) edge [DataLine] (aero)
 (opt-perf) edge [DataLine] (perf)
 (opt-ineq1) edge [DataLine] (ineq1)
-(opt-eq1) edge [DataLine] (eq1)
+(opt-ineq2) edge [DataLine] (ineq2)
+(opt-ineq3) edge [DataLine] (ineq3)
 (mda-loads) edge [DataLine] (loads)
 (mda-struct) edge [DataLine] (struct)
 (loads-struct) edge [DataLine] (struct)
@@ -197,7 +229,8 @@
 (struct-mda) edge [DataLine] (mda)
 (perf-opt) edge [DataLine] (opt)
 (ineq1-opt) edge [DataLine] (opt)
-(eq1-opt) edge [DataLine] (opt)
+(ineq2-opt) edge [DataLine] (opt)
+(ineq3-opt) edge [DataLine] (opt)
 (opt) edge [DataLine] (output_opt)
 (mda) edge [DataLine] (output_mda)
 (loads) edge [DataLine] (output_loads)
@@ -205,7 +238,8 @@
 (aero) edge [DataLine] (output_aero)
 (perf) edge [DataLine] (output_perf)
 (ineq1) edge [DataLine] (output_ineq1)
-(eq1) edge [DataLine] (output_eq1);
+(ineq2) edge [DataLine] (output_ineq2)
+(ineq3) edge [DataLine] (output_ineq3);
 \end{pgfonlayer}
 
 \end{tikzpicture}
